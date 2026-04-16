@@ -71,8 +71,16 @@ The system SHALL provide an interactive dependency graph visualization with pan 
 - **THEN** the system renders issues as nodes and dependencies as directed edges in an interactive graph
 
 #### Scenario: Pan and zoom graph
-- **WHEN** a user drags or scrolls on the graph
-- **THEN** the graph pans or zooms accordingly
+- **WHEN** a user drags the graph canvas or uses scroll or trackpad gestures over the graph
+- **THEN** the graph pans or zooms in a way that keeps the dependency view usable
+
+#### Scenario: Empty dependency graph
+- **WHEN** the loaded issues contain no dependency relationships
+- **THEN** the system displays an empty graph state or node-only view without crashing or rendering a broken visualization
+
+#### Scenario: Missing dependency reference
+- **WHEN** an issue references a dependency that is not present in the loaded issue set
+- **THEN** the system handles the missing reference gracefully and indicates that the graph is incomplete rather than failing silently or crashing
 
 ### Requirement: Shareable URLs
 

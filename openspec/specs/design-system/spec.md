@@ -60,4 +60,8 @@ The system SHALL define common styles, fonts, and theme logic as a canonical set
 
 #### Scenario: Token authoring
 - **WHEN** a developer updates a design token value
-- **THEN** the canonical source is a single reference (documented or in a shared snippet) that is copied into each viewer's embedded CSS
+- **THEN** the change is first made in one documented canonical token reference and then copied into each viewer's embedded CSS
+
+#### Scenario: Verify token consistency across viewers
+- **WHEN** a developer compares the embedded token declarations used by spec-viewer and beads-viewer
+- **THEN** the shared design token names and values match for typography, color, spacing, and theme variables

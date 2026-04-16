@@ -57,3 +57,7 @@ The system SHALL cache GitHub API responses in-memory for the duration of a brow
 #### Scenario: Cache tree and file responses
 - **WHEN** the same repository tree or file is requested more than once in a session
 - **THEN** the system serves the cached response instead of making a new API call
+
+#### Scenario: Refresh data by starting a new session
+- **WHEN** a user starts a new browsing session by reloading the viewer or reopening it later
+- **THEN** the system fetches fresh GitHub API responses rather than depending on stale in-memory cache entries from a prior session

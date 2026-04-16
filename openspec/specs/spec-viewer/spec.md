@@ -18,6 +18,10 @@ The system SHALL render Markdown, YAML, JSON, and TOML files from GitHub reposit
 - **WHEN** a user navigates to a YAML, JSON, or TOML file
 - **THEN** the system renders the file with syntax highlighting and readable formatting
 
+#### Scenario: Malformed structured data file
+- **WHEN** a user navigates to a YAML, JSON, or TOML file that cannot be parsed or formatted safely
+- **THEN** the system displays a clear error message instead of a broken or blank rendered view
+
 ### Requirement: File Tree Navigation
 
 The system SHALL provide hierarchical file tree navigation with search for browsing repository contents.
@@ -65,6 +69,10 @@ The system SHALL support deep linking via URL parameters so users can share link
 #### Scenario: URL reflects current state
 - **WHEN** a user navigates to a file in a repository
 - **THEN** the URL updates to reflect the current repo, branch, and file selection
+
+#### Scenario: Invalid deep link parameters
+- **WHEN** a user navigates to a URL whose `repo`, `branch`, or `file` parameters cannot be resolved
+- **THEN** the system displays a clear error state or falls back to a sensible default instead of showing a blank or broken view
 
 ### Requirement: Image Resolution
 
