@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Reads OpenSpec documents from GitHub repositories and renders them with clean typography, hierarchical navigation, and responsive layout. Deployed at `/spec-viewer/`. Related capability: [beads-viewer](../beads-viewer/spec.md).
+Reads openspec documents from GitHub repositories and renders them with clean typography, hierarchical navigation, and responsive layout. Deployed at `/spec-viewer/`. Related capability: [beads-viewer](../beads-viewer/spec.md).
 
 ## Requirements
 

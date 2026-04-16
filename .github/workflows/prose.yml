@@ -1,0 +1,20 @@
+name: prose
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  vale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: errata-ai/vale-action@v2
+        with:
+          files: |
+            README.md
+            docs
+            openspec
+            spec

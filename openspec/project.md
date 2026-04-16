@@ -38,7 +38,7 @@ The name comes from the Spanish word for a music stand: the object that holds th
 
 - Feature branches off main
 - Conventional commits (type: description)
-- Beads for issue tracking, openspec for change proposals
+- beads for issue tracking, openspec for change proposals
 
 ## Domain Context
 

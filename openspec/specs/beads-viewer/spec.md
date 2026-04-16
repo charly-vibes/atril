@@ -1,4 +1,4 @@
-# Capability: Beads Viewer
+# Capability: beads viewer
 
 ## Purpose
 

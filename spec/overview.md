@@ -22,7 +22,7 @@ The wai ecosystem has three complementary tools:
 
 ### Spec Viewer (`/spec-viewer`)
 
-Reads OpenSpec documents from GitHub repositories.
+Reads openspec documents from GitHub repositories.
 
 **Core capabilities:**
 - Render Markdown, YAML, JSON, TOML files with clean typography
@@ -37,7 +37,7 @@ Reads OpenSpec documents from GitHub repositories.
 - Source Serif 4 for body, JetBrains Mono for code, DM Sans for UI
 - Warm color palette, dark/light theme support
 
-### Beads Viewer (`/beads-viewer`)
+### beads viewer (`/beads-viewer`)
 
 Visualizes issue trackers created with the `bd` CLI.
 
@@ -70,7 +70,7 @@ Visualizes issue trackers created with the `bd` CLI.
 Both viewers were originally built as prototypes in [charly-vibes/jams](https://github.com/charly-vibes/jams):
 
 - Spec Viewer: [live prototype](https://charly-vibes.github.io/jams/spec-viewer/)
-- Beads Viewer: [live prototype](https://charly-vibes.github.io/jams/beads-viewer/)
+- beads viewer: [live prototype](https://charly-vibes.github.io/jams/beads-viewer/)
 
 This repository promotes them to a dedicated project where they can evolve with tighter integration to the wai ecosystem.
 
