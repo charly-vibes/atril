@@ -1,9 +1,19 @@
-plugins = []
-
 [project]
 name = "atril"
 version = "2026.4.3"
 description = ""
 tool_commit = "6662b78"
+
+[[plugins]]
+name = "openspec"
+enabled = true
+
+[plugins.settings]
+
+[[plugins]]
+name = "beads"
+enabled = true
+
+[plugins.settings]
 
 [llm]

@@ -1,5 +1,7 @@
 # atril
 
+[![tracked with wai](https://img.shields.io/badge/tracked%20with-wai-blue)](https://github.com/charly-vibes/wai)
+
 A music stand for your project's score.
 
 **atril** is a set of web-based viewers for the [wai](https://github.com/charly-vibes/wai) ecosystem. Where wai captures the *why* behind decisions, beads tracks *what* needs doing, and openspec defines *what the system should look like* — atril presents your specs and issues in a clean, readable interface.

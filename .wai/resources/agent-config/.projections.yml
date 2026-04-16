@@ -1,3 +1,11 @@
 # Agent config projections — defines how configs are synced to tool-specific locations
 # Strategies: symlink, inline, reference
-projections: []
+projections:
+  - strategy: symlink
+    sources:
+      - skills
+    target: .claude/skills/
+  - strategy: symlink
+    sources:
+      - skills
+    target: .agents/skills/
