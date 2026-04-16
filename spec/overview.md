@@ -43,7 +43,7 @@ Visualizes issue trackers created with the `bd` CLI.
 
 **Core capabilities:**
 - Load `.beads/issues.jsonl` from GitHub repositories
-- Filter by status (open/closed), type (task/bug/feature/epic), priority (P1-P3)
+- Filter by status (open/closed/in_progress), type (task/bug/feature/epic), priority (P0-P4)
 - Search issues by title and description
 - Two viewing modes:
   - **List/Detail**: sidebar browse with full metadata display
