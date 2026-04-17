@@ -3,9 +3,7 @@
 ## Purpose
 
 Shared visual design system used across all atril viewers. Defines typography, color palette, theme support, and responsive layout conventions.
-
 ## Requirements
-
 ### Requirement: Typography
 
 The system SHALL use Source Serif 4 for body text, JetBrains Mono for code, and DM Sans for UI elements.
@@ -51,19 +49,18 @@ The system SHALL be optimized for tablet reading with generous touch targets and
 - **THEN** the layout collapses to a single-column view with navigation accessible via toggle
 
 ### Requirement: Shared Design Tokens
-
-The system SHALL define common styles, fonts, and theme logic as a canonical set of CSS custom properties and font-face declarations. Each self-contained viewer HTML file SHALL embed these tokens so that all viewers share identical values without requiring a build step.
+The system SHALL define common styles, fonts, and theme logic as a canonical set of CSS custom properties and font-face declarations in shared CSS files. All viewers SHALL import these shared tokens at build time so that all views share identical values.
 
 #### Scenario: Consistent visual identity
-- **WHEN** both spec-viewer and beads-viewer are rendered side by side
+- **WHEN** multiple viewer modes are rendered
 - **THEN** they share the same fonts, colors, spacing, and theme behavior
 
 #### Scenario: Token authoring
 - **WHEN** a developer updates a design token value
-- **THEN** the change is first made in one documented canonical token reference and then copied into each viewer's embedded CSS
+- **THEN** the change is made in one shared CSS source file and automatically propagated to all viewers through the build pipeline
 
 #### Scenario: Verify token consistency across viewers
-- **WHEN** a developer compares the embedded token declarations used by spec-viewer and beads-viewer
+- **WHEN** a developer inspects the built output for any two viewer modes
 - **THEN** the shared design token names and values match for typography, color, spacing, and theme variables
 
 ### Requirement: Accessibility Contrast
@@ -93,3 +90,4 @@ The system SHALL provide print-friendly CSS so users can print or export documen
 #### Scenario: Print a rendered document
 - **WHEN** a user prints a page from any viewer
 - **THEN** the printed output uses readable typography, omits navigation chrome, and preserves content structure
+
