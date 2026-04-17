@@ -65,3 +65,31 @@ The system SHALL define common styles, fonts, and theme logic as a canonical set
 #### Scenario: Verify token consistency across viewers
 - **WHEN** a developer compares the embedded token declarations used by spec-viewer and beads-viewer
 - **THEN** the shared design token names and values match for typography, color, spacing, and theme variables
+
+### Requirement: Accessibility Contrast
+
+The system SHALL meet WCAG AA contrast ratio requirements (4.5:1 for normal text, 3:1 for large text) in both dark and light themes.
+
+#### Scenario: Light theme contrast compliance
+- **WHEN** the light theme is active
+- **THEN** all text-on-background color combinations meet WCAG AA minimum contrast ratios
+
+#### Scenario: Dark theme contrast compliance
+- **WHEN** the dark theme is active
+- **THEN** all text-on-background color combinations meet WCAG AA minimum contrast ratios
+
+### Requirement: Keyboard Navigation
+
+The system SHALL support keyboard navigation for all interactive UI elements so users can operate the interface without a pointing device.
+
+#### Scenario: Navigate interactive elements with keyboard
+- **WHEN** a user presses Tab or arrow keys
+- **THEN** focus moves through interactive elements (navigation, buttons, links, tree items) in a logical order with a visible focus indicator
+
+### Requirement: Print-Friendly Rendering
+
+The system SHALL provide print-friendly CSS so users can print or export documents to PDF with readable formatting.
+
+#### Scenario: Print a rendered document
+- **WHEN** a user prints a page from any viewer
+- **THEN** the printed output uses readable typography, omits navigation chrome, and preserves content structure

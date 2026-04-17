@@ -51,11 +51,11 @@ The system SHALL support switching between repository branches while preserving 
 The system SHALL auto-generate a table of contents for documents with 3 or more headings.
 
 #### Scenario: Generate TOC from headings
-- **WHEN** a user views a Markdown document with 3 or more headings
+- **WHEN** a user views a Markdown document with 3 or more headings at any level (h1 through h6)
 - **THEN** the system displays an auto-generated table of contents that links to each heading
 
 #### Scenario: No TOC for short documents
-- **WHEN** a user views a document with fewer than 3 headings
+- **WHEN** a user views a document with fewer than 3 headings at any level
 - **THEN** no table of contents is displayed
 
 ### Requirement: Deep Linking

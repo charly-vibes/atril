@@ -18,6 +18,10 @@ The system SHALL load `.beads/issues.jsonl` from a GitHub repository and parse i
 - **WHEN** a user loads issues without specifying a branch
 - **THEN** the system attempts the default branch first, then falls back to the `beads-sync` branch
 
+#### Scenario: Both branches lack issue data
+- **WHEN** a user loads issues and neither the default branch nor the `beads-sync` branch contains `.beads/issues.jsonl`
+- **THEN** the system displays an error indicating no issue data was found in the repository
+
 #### Scenario: Missing or malformed issues file
 - **WHEN** the repository has no `.beads/issues.jsonl` or the file contains invalid JSON lines
 - **THEN** the system displays a clear error message indicating the data could not be loaded
@@ -82,13 +86,17 @@ The system SHALL provide an interactive dependency graph visualization with pan 
 - **WHEN** an issue references a dependency that is not present in the loaded issue set
 - **THEN** the system handles the missing reference gracefully and indicates that the graph is incomplete rather than failing silently or crashing
 
+#### Scenario: Dependency cycle
+- **WHEN** the dependency data contains circular references (e.g., issue A depends on B and B depends on A)
+- **THEN** the system renders the cycle visually without hanging or crashing
+
 ### Requirement: Shareable URLs
 
 The system SHALL support shareable URLs that link to specific repositories and issues.
 
 #### Scenario: Share link to specific issue
 - **WHEN** a user selects an issue
-- **THEN** the URL updates to include the repository and issue identifier, allowing the link to be shared
+- **THEN** the URL updates to include the repository and issue identifier as query parameters (consistent with the spec-viewer `?repo=` pattern), allowing the link to be shared
 
 ### Requirement: Data Freshness Indicator
 
