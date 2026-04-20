@@ -19,5 +19,6 @@ if (!result.success) {
 
 // Copy static assets
 await $`cp src/index.html ${outdir}/index.html`;
+await $`cp src/styles.css ${outdir}/styles.css`;
 
 console.log(`Built ${result.outputs.length} files to ${outdir}/`);

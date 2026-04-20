@@ -1,0 +1,204 @@
+:root {
+  --font-body: "Source Serif 4", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-ui: "DM Sans", system-ui, sans-serif;
+  --color-bg: #fafaf8;
+  --color-fg: #1a1a1a;
+  --color-muted: #6b6b6b;
+  --color-accent: #2563eb;
+  --color-error: #dc2626;
+  --color-border: #e5e5e5;
+  --color-surface: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a1a;
+    --color-fg: #e5e5e5;
+    --color-muted: #999;
+    --color-accent: #60a5fa;
+    --color-error: #f87171;
+    --color-border: #333;
+    --color-surface: #242424;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  line-height: 1.6;
+}
+
+#app {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+/* Entry screen */
+#entry-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 20vh;
+}
+
+#entry-screen h1 {
+  font-family: var(--font-ui);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+#repo-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+#repo-input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+}
+
+#repo-input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+button {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--color-accent);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 0.85rem;
+}
+
+.loading {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Overview screen */
+#overview-header {
+  margin-bottom: 1.5rem;
+}
+
+#overview-header h2 {
+  font-family: var(--font-ui);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+#overview-header .branch {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+#overview-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-badge {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.source-badge[data-active="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+#overview-suggestions h3 {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: var(--color-muted);
+}
+
+.suggestion-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  border-color: var(--color-accent);
+}
+
+.suggestion-item .label {
+  font-family: var(--font-ui);
+  font-weight: 500;
+}
+
+.suggestion-item .path {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+/* Error screen */
+#error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 20vh;
+}
+
+#error-screen .error {
+  font-size: 1rem;
+}

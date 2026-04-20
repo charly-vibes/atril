@@ -1,8 +1,8 @@
 ## 1. Repository entry and overview
-- [ ] 1.1 Add failing tests or validation checks for repository slug and GitHub URL normalization
-- [ ] 1.2 Implement repository entry flow that accepts `owner/repo` and GitHub repository URLs
-- [ ] 1.3 Implement repository overview with detected knowledge sources and recommended entry points
-- [ ] 1.4 Validate overview behavior against repositories with and without OpenSpec, beads, `.wai`, and docs
+- [x] 1.1 Add failing tests or validation checks for repository slug and GitHub URL normalization
+- [x] 1.2 Implement repository entry flow that accepts `owner/repo` and GitHub repository URLs
+- [x] 1.3 Implement repository overview with detected knowledge sources and recommended entry points
+- [x] 1.4 Validate overview behavior against repositories with and without OpenSpec, beads, `.wai`, and docs
 
 ## 2. Shared navigation and document cross-references
 - [ ] 2.1 Add failing tests for internal repository link resolution and anchor navigation

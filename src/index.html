@@ -4,9 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>atril</title>
+  <link rel="stylesheet" href="styles.css">
   <script type="module" src="main.js"></script>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <div id="entry-screen" class="screen">
+      <h1>atril</h1>
+      <p class="subtitle">A reading stand for your repository</p>
+      <form id="repo-form">
+        <input
+          id="repo-input"
+          type="text"
+          placeholder="owner/repo or GitHub URL"
+          autocomplete="off"
+          autofocus
+        />
+        <button type="submit">Open</button>
+      </form>
+      <p id="repo-error" class="error" role="alert"></p>
+    </div>
+    <div id="overview-screen" class="screen" hidden>
+      <header id="overview-header"></header>
+      <div id="overview-sources"></div>
+      <div id="overview-suggestions"></div>
+      <div id="overview-empty" hidden>
+        <p>No structured knowledge sources detected in this repository.</p>
+      </div>
+    </div>
+    <div id="loading-screen" class="screen" hidden>
+      <p class="loading">Loading repository…</p>
+    </div>
+    <div id="error-screen" class="screen" hidden>
+      <p id="error-message" class="error"></p>
+      <button id="error-back">Back</button>
+    </div>
+  </div>
 </body>
 </html>

@@ -1,0 +1,86 @@
+import type { GitHubTreeEntry } from "./github-api";
+
+export interface KnowledgeSources {
+  openspec: boolean;
+  beads: boolean;
+  wai: boolean;
+  docs: boolean;
+  readme: boolean;
+}
+
+export interface EntryPoint {
+  label: string;
+  path: string;
+  kind: "openspec" | "beads" | "wai" | "docs" | "readme";
+}
+
+const README_PATTERN = /^readme(\.\w+)?$/i;
+
+export function detectKnowledgeSources(entries: GitHubTreeEntry[]): KnowledgeSources {
+  let openspec = false;
+  let beads = false;
+  let wai = false;
+  let docs = false;
+  let readme = false;
+
+  for (const entry of entries) {
+    if (entry.path.startsWith("openspec/")) openspec = true;
+    if (entry.path.startsWith(".beads/")) beads = true;
+    if (entry.path.startsWith(".wai/")) wai = true;
+    if (entry.path.startsWith("docs/")) docs = true;
+    if (README_PATTERN.test(entry.path)) readme = true;
+  }
+
+  return { openspec, beads, wai, docs, readme };
+}
+
+export function suggestEntryPoints(
+  sources: KnowledgeSources,
+  entries: GitHubTreeEntry[],
+): EntryPoint[] {
+  const suggestions: EntryPoint[] = [];
+
+  if (sources.readme) {
+    const readmeEntry = entries.find((e) => README_PATTERN.test(e.path));
+    if (readmeEntry) {
+      suggestions.push({ label: "README", path: readmeEntry.path, kind: "readme" });
+    }
+  }
+
+  if (sources.openspec) {
+    const hasProject = entries.some((e) => e.path === "openspec/project.md");
+    if (hasProject) {
+      suggestions.push({
+        label: "Project overview",
+        path: "openspec/project.md",
+        kind: "openspec",
+      });
+    }
+  }
+
+  if (sources.beads) {
+    suggestions.push({
+      label: "Issues",
+      path: ".beads/issues.jsonl",
+      kind: "beads",
+    });
+  }
+
+  if (sources.wai) {
+    suggestions.push({
+      label: "Project memory",
+      path: ".wai/",
+      kind: "wai",
+    });
+  }
+
+  if (sources.docs) {
+    suggestions.push({
+      label: "Documentation",
+      path: "docs/",
+      kind: "docs",
+    });
+  }
+
+  return suggestions;
+}
