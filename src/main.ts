@@ -1,17 +1,24 @@
 import { parseRepoInput, type RepoRef } from "./shared/github";
-import { GitHubClient, GitHubApiError } from "./shared/github-api";
+import { GitHubClient, GitHubApiError, type TreeResult } from "./shared/github-api";
 import {
   detectKnowledgeSources,
   suggestEntryPoints,
   type KnowledgeSources,
   type EntryPoint,
 } from "./shared/repo-overview";
+import { resolveLink } from "./shared/link-resolver";
+import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
 
 const $ = (id: string) => document.getElementById(id);
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 const screens = {
   entry: $("entry-screen")!,
   overview: $("overview-screen")!,
+  file: $("file-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -21,8 +28,15 @@ const input = $("repo-input") as HTMLInputElement;
 const repoError = $("repo-error")!;
 const errorMessage = $("error-message")!;
 const errorBack = $("error-back")!;
+const fileBack = $("file-back")!;
+const fileBreadcrumb = $("file-breadcrumb")!;
+const fileContent = $("file-content")!;
 
 const client = new GitHubClient();
+
+/** Current repo context, set after initial load. */
+let currentContext: RepoContext | null = null;
+let currentTree: TreeResult | null = null;
 
 function showScreen(name: keyof typeof screens) {
   for (const [key, el] of Object.entries(screens)) {
@@ -30,9 +44,54 @@ function showScreen(name: keyof typeof screens) {
   }
 }
 
+function navigate(ctx: RepoContext, target: RouteTarget) {
+  const url = buildRoute(ctx, target);
+  history.pushState(null, "", url);
+  currentContext = ctx;
+  routeTo(target);
+}
+
+function routeTo(target: RouteTarget) {
+  if (target.view === "overview") {
+    showScreen("overview");
+  } else if (target.view === "file" && target.path) {
+    showFileView(target.path, target.anchor);
+  }
+}
+
+async function showFileView(path: string, anchor?: string) {
+  if (!currentContext) return;
+  showScreen("loading");
+
+  fileBreadcrumb.textContent = path;
+
+  try {
+    const content = await client.getFileContent(
+      currentContext.owner,
+      currentContext.repo,
+      currentContext.branch,
+      path,
+    );
+    fileContent.textContent = content;
+    showScreen("file");
+
+    if (anchor) {
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView();
+    }
+  } catch (err) {
+    if (err instanceof GitHubApiError) {
+      errorMessage.textContent = err.message;
+    } else {
+      errorMessage.textContent = "Failed to load file.";
+    }
+    showScreen("error");
+  }
+}
+
 function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources, suggestions: EntryPoint[]) {
   const header = $("overview-header")!;
-  header.innerHTML = `<h2>${ref.owner}/${ref.repo}</h2><span class="branch">${branch}</span>`;
+  header.innerHTML = `<h2>${escapeHtml(ref.owner)}/${escapeHtml(ref.repo)}</h2><span class="branch">${escapeHtml(branch)}</span>`;
 
   const sourcesEl = $("overview-sources")!;
   const sourceLabels: [keyof KnowledgeSources, string][] = [
@@ -63,9 +122,9 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
         ${suggestions
           .map(
             (s) =>
-              `<li class="suggestion-item" data-path="${s.path}" data-kind="${s.kind}">
-                <span class="label">${s.label}</span>
-                <span class="path">${s.path}</span>
+              `<li class="suggestion-item" data-path="${escapeHtml(s.path)}" data-kind="${escapeHtml(s.kind)}">
+                <span class="label">${escapeHtml(s.label)}</span>
+                <span class="path">${escapeHtml(s.path)}</span>
               </li>`,
           )
           .join("")}
@@ -73,17 +132,23 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
   }
 }
 
-async function loadRepo(ref: RepoRef) {
+async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
   showScreen("loading");
 
   try {
     const branch = await client.getDefaultBranch(ref.owner, ref.repo);
     const tree = await client.getTree(ref.owner, ref.repo, branch);
+
+    currentContext = { owner: ref.owner, repo: ref.repo, branch };
+    currentTree = tree;
+
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
 
     renderOverview(ref, branch, sources, suggestions);
-    showScreen("overview");
+
+    const target = initialTarget ?? { view: "overview" as const };
+    navigate(currentContext, target);
   } catch (err) {
     if (err instanceof GitHubApiError) {
       errorMessage.textContent = err.message;
@@ -94,6 +159,7 @@ async function loadRepo(ref: RepoRef) {
   }
 }
 
+// Entry form
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const ref = parseRepoInput(input.value);
@@ -105,7 +171,68 @@ form.addEventListener("submit", (e) => {
   loadRepo(ref);
 });
 
+// Suggestion clicks → navigate to file
+document.addEventListener("click", (e) => {
+  const item = (e.target as HTMLElement).closest(".suggestion-item") as HTMLElement | null;
+  if (item && currentContext) {
+    const path = item.dataset.path;
+    if (path) {
+      navigate(currentContext, { view: "file", path });
+    }
+  }
+});
+
+// Link clicks within file content → resolve and navigate
+fileContent.addEventListener("click", (e) => {
+  const link = (e.target as HTMLElement).closest("a") as HTMLAnchorElement | null;
+  if (!link || !currentContext || !currentTree) return;
+
+  const href = link.getAttribute("href");
+  if (!href) return;
+
+  const currentPath = fileBreadcrumb.textContent ?? "";
+  const resolved = resolveLink(href, currentPath, currentTree.entries);
+
+  if (resolved.kind === "file") {
+    e.preventDefault();
+    navigate(currentContext, { view: "file", path: resolved.path, anchor: resolved.anchor });
+  } else if (resolved.kind === "anchor") {
+    // Let browser handle same-page anchor navigation
+  } else if (resolved.kind === "external") {
+    // Let browser handle external links (opens in new tab via target)
+  }
+  // unresolved: do nothing, link stays inert
+});
+
+// File back button → overview
+fileBack.addEventListener("click", () => {
+  if (currentContext) {
+    navigate(currentContext, { view: "overview" });
+  }
+});
+
+// Error back → entry
 errorBack.addEventListener("click", () => {
   showScreen("entry");
   input.focus();
 });
+
+// Browser back/forward → re-route
+window.addEventListener("popstate", () => {
+  const route = parseRoute(new URLSearchParams(location.search));
+  if (route) {
+    currentContext = route.context;
+    routeTo(route.target);
+  } else {
+    showScreen("entry");
+  }
+});
+
+// On page load, check for existing route in URL
+const initialRoute = parseRoute(new URLSearchParams(location.search));
+if (initialRoute) {
+  loadRepo(
+    { owner: initialRoute.context.owner, repo: initialRoute.context.repo },
+    initialRoute.target,
+  );
+}
