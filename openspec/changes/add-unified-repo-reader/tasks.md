@@ -5,7 +5,7 @@
 - [x] 1.4 Validate overview behavior against repositories with and without OpenSpec, beads, `.wai`, and docs
 
 ## 2. Shared navigation and document cross-references
-- [ ] 2.1 Add failing tests for internal repository link resolution and anchor navigation
+- [x] 2.1 Add failing tests for internal repository link resolution and anchor navigation
 - [ ] 2.2 Implement repository-aware link routing for supported document views
 - [ ] 2.3 Surface related OpenSpec artifacts from spec documents without losing repository context
 - [ ] 2.4 Verify graceful fallback for unresolved links and missing targets

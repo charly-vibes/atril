@@ -1,0 +1,6 @@
+run_id: ticket-cycle-2026-04-20-phase2
+pipeline: ticket-cycle
+topic: phase2
+created_at: '2026-04-20T22:06:32.801653481+00:00'
+current_step: 3
+approvals: {}

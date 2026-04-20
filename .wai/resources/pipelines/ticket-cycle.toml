@@ -1,0 +1,73 @@
+[pipeline]
+name = "ticket-cycle"
+description = "Implement a beads ticket with TDD, review with Ro5, fix issues, commit"
+
+[pipeline.metadata]
+when = "Working through beads tickets one by one"
+skills = ["implement-plan", "rule-of-5-universal", "commit"]
+
+# Step 1: Claim and implement the ticket using TDD
+[[steps]]
+id = "implement"
+prompt = """
+1. Run `bd ready` to find the next available ticket
+2. Run `bd show <id>` to read the ticket details
+3. Claim it: `bd update <id> --claim`
+4. Read relevant source files and specs before coding
+5. Implement using strict TDD:
+   - Write a failing test first (RED)
+   - Write minimal code to pass (GREEN)
+   - Tidy in place if needed (REFACTOR)
+6. Run `bun test` to confirm all tests pass
+7. Record what you built: `wai add research "implemented <ticket-title>"`
+"""
+
+# Step 2: Rule of 5 universal review on the implementation
+[[steps]]
+id = "review"
+prompt = """
+Run `/rule-of-5-universal` on all files changed since the last commit.
+
+Target: the implementation from the previous step.
+Scope: `git diff --name-only HEAD` to find changed files.
+Review the code for correctness, edge cases, security, readability, and design.
+Record findings as a wai review artifact.
+"""
+
+[steps.gate]
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
+
+# Step 3: Fix all issues found in the review
+[[steps]]
+id = "fix"
+prompt = """
+Read the review findings from the previous step.
+Fix ALL issues flagged by the Ro5 review:
+- Critical and high severity: must fix
+- Medium: fix if straightforward
+- Low/style: fix if quick, skip if trivial
+Run `bun test` after fixes to confirm nothing broke.
+"""
+
+[steps.gate]
+[steps.gate.structural]
+min_artifacts = 1
+types = ["review"]
+
+# Step 4: Commit the work and close the ticket
+[[steps]]
+id = "commit"
+prompt = """
+1. Run `bun test` one final time to confirm green
+2. Stage and commit all changes with a descriptive message
+3. Close the beads ticket: `bd close <id>`
+4. Update openspec tasks.md if applicable (check box)
+5. Report: "Ticket <id> done. Run `wai pipeline next` for the next ticket, or `wai pipeline start ticket-cycle --topic=<next>` for a fresh cycle."
+"""
+
+[steps.gate]
+[steps.gate.structural]
+min_artifacts = 1
+types = ["research"]
