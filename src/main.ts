@@ -7,6 +7,7 @@ import {
   type EntryPoint,
 } from "./shared/repo-overview";
 import { resolveLink } from "./shared/link-resolver";
+import { resolveIssueReferences, type IssueReference } from "./shared/issue-reference";
 import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
 import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
@@ -81,11 +82,39 @@ function routeTo(target: RouteTarget) {
   }
 }
 
+function renderIssueReferences(refs: IssueReference[]): string {
+  if (refs.length === 0) return "";
+
+  const items = refs.map((ref) => {
+    if (ref.status === "navigable" && ref.path) {
+      return `<li><button class="issue-ref-link" data-path="${escapeHtml(ref.path)}">${escapeHtml(ref.text)}</button> <span class="ref-path">${escapeHtml(ref.path)}</span></li>`;
+    }
+    if (ref.status === "external") {
+      return `<li><span class="ref-external">${escapeHtml(ref.text)}</span> <span class="ref-hint">(external)</span></li>`;
+    }
+    return `<li><span class="ref-unresolved">${escapeHtml(ref.text)}</span> <span class="ref-hint">(no destination available)</span></li>`;
+  });
+
+  return `
+    <div class="issue-references">
+      <h4>Referenced artifacts</h4>
+      <ul>${items.join("")}</ul>
+    </div>`;
+}
+
 function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
   const mode = target.mode ?? "graph";
 
   if (mode === "focus" && target.issueId) {
     beadsBreadcrumb.textContent = `Issues / ${target.issueId}`;
+
+    // Issue body is not available on the route target — resolve from ID/dependency
+    // strings only. Full description resolution requires API integration (future work).
+    const issueText = target.issueId + (target.missingDependencyId ? ` ${target.missingDependencyId}` : "");
+    const refs = currentTree
+      ? resolveIssueReferences(issueText, currentTree.entries)
+      : [];
+
     beadsContent.innerHTML = `
       <section class="beads-panel">
         <h3>Focused dependency view</h3>
@@ -96,6 +125,7 @@ function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
           <li>Navigation back to the broader graph mode keeps the same repository selected.</li>
         </ul>
         ${target.missingDependencyId ? `<p class="warning">Missing dependency: ${escapeHtml(target.missingDependencyId)}. The issue remains selected so the UI can show a fallback instead of breaking navigation.</p>` : ""}
+        ${renderIssueReferences(refs)}
       </section>`;
     showScreen("beads");
     return;
@@ -346,6 +376,15 @@ historyContent.addEventListener("click", (e) => {
 fileBack.addEventListener("click", () => {
   if (currentContext) {
     navigate(currentContext, { view: "overview" });
+  }
+});
+
+// Issue reference links in beads view → navigate to file
+beadsContent.addEventListener("click", (e) => {
+  const link = (e.target as HTMLElement).closest(".issue-ref-link") as HTMLElement | null;
+  const path = link?.dataset.path;
+  if (path && currentContext) {
+    navigate(currentContext, { view: "file", path });
   }
 });
 
