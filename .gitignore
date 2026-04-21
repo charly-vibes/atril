@@ -11,3 +11,6 @@ bun.lock
 .dolt/
 *.db
 .beads-credential-key
+
+# Local agent settings
+.claude/settings.local.json
