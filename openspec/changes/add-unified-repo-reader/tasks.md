@@ -24,7 +24,7 @@
 
 ## 5. History reading mode
 - [x] 5.1 Add failing tests for recent commit loading and path-specific history lookup
-- [ ] 5.2 Implement history overview with recent commits and changed paths
+- [x] 5.2 Implement history overview with recent commits and changed paths
 - [ ] 5.3 Implement path-aware history from a selected document or artifact view
 - [ ] 5.4 Validate caching and error handling under GitHub API rate-limit constraints
 
