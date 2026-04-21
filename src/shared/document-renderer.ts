@@ -1,10 +1,4 @@
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;");
-}
+import { escapeHtml } from "./html-utils";
 
 function renderInlineMarkdown(text: string): string {
   const escaped = escapeHtml(text);

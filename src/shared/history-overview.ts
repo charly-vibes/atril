@@ -1,8 +1,5 @@
 import type { CommitHistoryEntry } from "./github-api";
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
-}
+import { escapeHtml } from "./html-utils";
 
 function formatTimestamp(iso: string): string {
   const date = new Date(iso);

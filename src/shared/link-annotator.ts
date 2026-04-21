@@ -1,7 +1,5 @@
 import type { GitHubTreeEntry } from "./github-api";
-import { resolveLink, type ResolvedLink, type LinkTarget } from "./link-resolver";
-
-export type LinkStatus = "navigable" | "unresolved" | "external";
+import { resolveLink, type ResolvedLink, type LinkTarget, type LinkStatus } from "./link-resolver";
 
 export interface AnnotatedLink {
   text: string;

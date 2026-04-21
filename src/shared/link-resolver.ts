@@ -2,6 +2,9 @@ import type { GitHubTreeEntry } from "./github-api";
 
 export type LinkKind = "file" | "anchor" | "external" | "unresolved";
 
+/** Consumer-facing resolution status — collapses "file"/"anchor" to "navigable". */
+export type LinkStatus = "navigable" | "unresolved" | "external";
+
 export interface ResolvedLink {
   kind: LinkKind;
   path: string;

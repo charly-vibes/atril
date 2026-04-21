@@ -1,12 +1,10 @@
 import type { GitHubTreeEntry } from "./github-api";
-import { extractLinks, resolveLink } from "./link-resolver";
-
-export type ReferenceStatus = "navigable" | "unresolved" | "external";
+import { extractLinks, resolveLink, type LinkStatus } from "./link-resolver";
 
 export interface IssueReference {
   text: string;
   path?: string;
-  status: ReferenceStatus;
+  status: LinkStatus;
 }
 
 /**

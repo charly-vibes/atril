@@ -12,12 +12,9 @@ import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./sh
 import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
 import { renderReadableDocument } from "./shared/document-renderer";
+import { escapeHtml } from "./shared/html-utils";
 
 const $ = (id: string) => document.getElementById(id);
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
 
 const screens = {
   entry: $("entry-screen")!,
@@ -372,13 +369,6 @@ historyContent.addEventListener("click", (e) => {
   }
 });
 
-// File back button → overview
-fileBack.addEventListener("click", () => {
-  if (currentContext) {
-    navigate(currentContext, { view: "overview" });
-  }
-});
-
 // Issue reference links in beads view → navigate to file
 beadsContent.addEventListener("click", (e) => {
   const link = (e.target as HTMLElement).closest(".issue-ref-link") as HTMLElement | null;
@@ -388,23 +378,14 @@ beadsContent.addEventListener("click", (e) => {
   }
 });
 
-beadsBack.addEventListener("click", () => {
-  if (currentContext) {
-    navigate(currentContext, { view: "overview" });
-  }
-});
-
-historyBack.addEventListener("click", () => {
-  if (currentContext) {
-    navigate(currentContext, { view: "overview" });
-  }
-});
-
-waiBack.addEventListener("click", () => {
-  if (currentContext) {
-    navigate(currentContext, { view: "overview" });
-  }
-});
+// Back buttons → overview
+for (const btn of [fileBack, beadsBack, historyBack, waiBack]) {
+  btn.addEventListener("click", () => {
+    if (currentContext) {
+      navigate(currentContext, { view: "overview" });
+    }
+  });
+}
 
 // Error back → entry
 errorBack.addEventListener("click", () => {

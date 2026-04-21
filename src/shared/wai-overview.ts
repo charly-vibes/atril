@@ -1,18 +1,11 @@
 import type { GitHubTreeEntry } from "./github-api";
+import { escapeHtml } from "./html-utils";
 
 export interface WaiArtifactGroup {
   id: string;
   label: string;
   mode: "project" | "location";
   paths: string[];
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;");
 }
 
 function isWaiArtifact(path: string): boolean {
