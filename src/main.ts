@@ -9,6 +9,8 @@ import {
 import { resolveLink } from "./shared/link-resolver";
 import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
 import { renderHistoryOverview } from "./shared/history-overview";
+import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
+import { renderReadableDocument } from "./shared/document-renderer";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -22,6 +24,7 @@ const screens = {
   file: $("file-screen")!,
   beads: $("beads-screen")!,
   history: $("history-screen")!,
+  wai: $("wai-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -40,6 +43,9 @@ const beadsContent = $("beads-content")!;
 const historyBack = $("history-back")!;
 const historyBreadcrumb = $("history-breadcrumb")!;
 const historyContent = $("history-content")!;
+const waiBack = $("wai-back")!;
+const waiBreadcrumb = $("wai-breadcrumb")!;
+const waiContent = $("wai-content")!;
 
 const client = new GitHubClient();
 
@@ -69,6 +75,8 @@ function routeTo(target: RouteTarget) {
     showBeadsView(target);
   } else if (target.view === "history") {
     showHistoryView(target.path);
+  } else if (target.view === "wai") {
+    showWaiView();
   }
 }
 
@@ -127,6 +135,14 @@ async function showHistoryView(path?: string) {
   }
 }
 
+function showWaiView() {
+  if (!currentContext || !currentTree) return;
+
+  waiBreadcrumb.textContent = "WAI / grouped artifacts";
+  waiContent.innerHTML = renderWaiOverview(buildWaiArtifactGroups(currentTree.entries));
+  showScreen("wai");
+}
+
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   showScreen("loading");
@@ -140,7 +156,7 @@ async function showFileView(path: string, anchor?: string) {
       currentContext.branch,
       path,
     );
-    fileContent.textContent = content;
+    fileContent.innerHTML = renderReadableDocument(path, content);
     showScreen("file");
 
     if (anchor) {
@@ -252,6 +268,10 @@ document.addEventListener("click", (e) => {
       navigate(currentContext, { view: "beads", mode: "graph" });
       return;
     }
+    if (kind === "wai") {
+      navigate(currentContext, { view: "wai" });
+      return;
+    }
     if (path) {
       navigate(currentContext, { view: "file", path });
     }
@@ -262,6 +282,14 @@ document.addEventListener("click", (e) => {
   const historyButton = (e.target as HTMLElement).closest("#open-history");
   if (historyButton && currentContext) {
     navigate(currentContext, { view: "history" });
+  }
+});
+
+waiContent.addEventListener("click", (e) => {
+  const item = (e.target as HTMLElement).closest(".wai-artifact-link") as HTMLElement | null;
+  const path = item?.dataset.path;
+  if (path && currentContext) {
+    navigate(currentContext, { view: "file", path });
   }
 });
 
@@ -301,6 +329,12 @@ beadsBack.addEventListener("click", () => {
 });
 
 historyBack.addEventListener("click", () => {
+  if (currentContext) {
+    navigate(currentContext, { view: "overview" });
+  }
+});
+
+waiBack.addEventListener("click", () => {
   if (currentContext) {
     navigate(currentContext, { view: "overview" });
   }

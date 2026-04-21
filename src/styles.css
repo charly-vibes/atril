@@ -196,7 +196,8 @@ button:hover {
 
 #file-nav,
 #beads-nav,
-#history-nav {
+#history-nav,
+#wai-nav {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -205,7 +206,8 @@ button:hover {
 
 #file-breadcrumb,
 #beads-breadcrumb,
-#history-breadcrumb {
+#history-breadcrumb,
+#wai-breadcrumb {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--color-muted);
@@ -213,15 +215,39 @@ button:hover {
 
 #file-content,
 #beads-content,
-#history-content {
+#history-content,
+#wai-content {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem;
 }
 
+#file-content h1,
+#file-content h2,
+#file-content h3 {
+  font-family: var(--font-ui);
+  margin-bottom: 0.75rem;
+}
+
+#file-content p,
+#file-content pre {
+  margin-top: 0.75rem;
+}
+
+#file-content a {
+  color: var(--color-accent);
+}
+
+#file-content pre {
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
 .beads-panel h3,
-.history-panel h3 {
+.history-panel h3,
+.wai-panel h3 {
   font-family: var(--font-ui);
   margin-bottom: 0.5rem;
 }
@@ -230,7 +256,9 @@ button:hover {
 .beads-panel ul,
 .beads-panel .warning,
 .history-panel p + p,
-.history-list {
+.history-list,
+.wai-panel p + p,
+.wai-group {
   margin-top: 0.75rem;
 }
 
@@ -276,6 +304,42 @@ button:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.wai-scope,
+.wai-artifact-path {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.wai-group h4 {
+  font-family: var(--font-ui);
+  margin-bottom: 0.5rem;
+}
+
+.wai-artifact-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wai-artifact-link {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.wai-artifact-name {
+  font-family: var(--font-ui);
+  font-weight: 500;
+}
+
+.wai-artifact-path {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 
 /* Error screen */

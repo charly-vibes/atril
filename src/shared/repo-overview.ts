@@ -26,7 +26,7 @@ export function detectKnowledgeSources(entries: GitHubTreeEntry[]): KnowledgeSou
   for (const entry of entries) {
     if (entry.path.startsWith("openspec/")) openspec = true;
     if (entry.path.startsWith(".beads/")) beads = true;
-    if (entry.path.startsWith(".wai/")) wai = true;
+    if (entry.path === ".wai" || entry.path.startsWith(".wai/")) wai = true;
     if (entry.path.startsWith("docs/")) docs = true;
     if (README_PATTERN.test(entry.path)) readme = true;
   }

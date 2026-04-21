@@ -51,6 +51,17 @@ describe("detectKnowledgeSources", () => {
     expect(sources.readme).toBe(true);
   });
 
+  test("detects a top-level .wai directory entry", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: ".wai", type: "tree", sha: "abc" },
+      { path: "src/main.ts", type: "blob", sha: "def" },
+    ];
+
+    const sources = detectKnowledgeSources(entries);
+
+    expect(sources.wai).toBe(true);
+  });
+
   test("handles empty tree", () => {
     const sources = detectKnowledgeSources([]);
     expect(sources.openspec).toBe(false);

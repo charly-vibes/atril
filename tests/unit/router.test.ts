@@ -113,6 +113,23 @@ describe("history routes (OpenSpec add-unified-repo-reader:5.2)", () => {
   });
 });
 
+describe("wai routes (OpenSpec add-unified-repo-reader:4.2)", () => {
+  const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
+
+  test("builds a wai overview route that preserves repository context", () => {
+    const params = buildRoute(ctx, { view: "wai" } as any);
+    expect(params).toBe("?owner=acme&repo=widgets&branch=main&view=wai");
+  });
+
+  test("parses a wai overview route", () => {
+    const route = parseRoute(new URLSearchParams("owner=acme&repo=widgets&branch=main&view=wai"));
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "wai" },
+    });
+  });
+});
+
 describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () => {
   const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
 

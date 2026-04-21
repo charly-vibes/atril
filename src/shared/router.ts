@@ -5,7 +5,7 @@ export interface RepoContext {
   branch: string;
 }
 
-export type ViewType = "overview" | "file" | "beads" | "history";
+export type ViewType = "overview" | "file" | "beads" | "history" | "wai";
 export type BeadsMode = "graph" | "focus";
 
 export type RouteTarget =
@@ -17,7 +17,8 @@ export type RouteTarget =
       issueId?: string;
       missingDependencyId?: string;
     }
-  | { view: "history"; path?: string };
+  | { view: "history"; path?: string }
+  | { view: "wai" };
 
 /** A fully resolved route: context + target. */
 export interface Route {
@@ -29,7 +30,7 @@ interface BuildOptions {
   omitDefaultBranch?: string;
 }
 
-const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history"]);
+const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history", "wai"]);
 const VALID_BEADS_MODES = new Set<BeadsMode>(["graph", "focus"]);
 
 /**
@@ -117,6 +118,10 @@ export function parseRoute(params: URLSearchParams): Route | null {
   if (view === "history") {
     const path = params.get("path") ?? undefined;
     return { context, target: path ? { view, path } : { view } };
+  }
+
+  if (view === "wai") {
+    return { context, target: { view } };
   }
 
   return { context, target: { view: "overview" } };

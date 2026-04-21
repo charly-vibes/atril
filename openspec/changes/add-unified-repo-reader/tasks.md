@@ -17,9 +17,9 @@
 - [ ] 3.4 Manually validate dependency readability on repositories with dense graphs
 
 ## 4. wai reading mode
-- [ ] 4.1 Add failing tests for `.wai` detection and grouped artifact browsing
-- [ ] 4.2 Implement `.wai` overview and grouped browsing by project, artifact type, or location
-- [ ] 4.3 Implement readable rendering for `.wai` artifacts with preserved repository context
+- [x] 4.1 Add failing tests for `.wai` detection and grouped artifact browsing
+- [x] 4.2 Implement `.wai` overview and grouped browsing by project, artifact type, or location
+- [x] 4.3 Implement readable rendering for `.wai` artifacts with preserved repository context
 - [ ] 4.4 Manually validate behavior on repositories without `.wai`
 
 ## 5. History reading mode
