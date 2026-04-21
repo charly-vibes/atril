@@ -13,7 +13,7 @@
 ## 3. beads dependency exploration improvements
 - [x] 3.1 Add failing tests for focused dependency inspection modes and missing dependency handling
 - [x] 3.2 Implement at least one focused dependency view in addition to the existing graph mode
-- [ ] 3.3 Add issue-to-artifact navigation for resolvable references
+- [x] 3.3 Add issue-to-artifact navigation for resolvable references
 - [ ] 3.4 Manually validate dependency readability on repositories with dense graphs
 
 ## 4. wai reading mode
@@ -25,10 +25,10 @@
 ## 5. History reading mode
 - [x] 5.1 Add failing tests for recent commit loading and path-specific history lookup
 - [x] 5.2 Implement history overview with recent commits and changed paths
-- [ ] 5.3 Implement path-aware history from a selected document or artifact view
+- [x] 5.3 Implement path-aware history from a selected document or artifact view
 - [ ] 5.4 Validate caching and error handling under GitHub API rate-limit constraints
 
 ## 6. Tidy and documentation
-- [ ] 6.1 Tidy shared repository-context and routing abstractions after green tests
+- [x] 6.1 Tidy shared repository-context and routing abstractions after green tests
 - [ ] 6.2 Update README and supporting docs to describe the unified repository reader UX
 - [ ] 6.3 Run `openspec validate add-unified-repo-reader --strict`
