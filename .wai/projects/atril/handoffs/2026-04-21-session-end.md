@@ -36,33 +36,21 @@ phase: implement
 
 ```
  M .wai/pipeline-runs/ticket-cycle-2026-04-20-task-2-4.yml
- M openspec/changes/add-unified-repo-reader/tasks.md
- M src/index.html
- M src/main.ts
- M src/shared/github-api.ts
- M src/shared/router.ts
- M src/styles.css
- M tests/unit/github-api.test.ts
- M tests/unit/router.test.ts
+ M .wai/pipeline-runs/ticket-cycle-2026-04-21-atril-ff3-wai-artifact-readable-rendering.yml
+ M .wai/projects/atril/handoffs/2026-04-21-session-end.md
 ?? .claude/settings.local.json
-?? .wai/projects/atril/.pending-resume
-?? .wai/projects/atril/handoffs/
+?? .wai/projects/atril/handoffs/2026-04-20-session-end.md
 ?? .wai/projects/atril/plans/
 ?? .wai/projects/atril/research/2026-04-20-committed-task-2-4-closed-atril-icw-phase-2-comp.md
 ?? .wai/projects/atril/research/2026-04-20-completed-atril-dth-as-the-red-phase-for-history-m.md
-?? .wai/resources/pipelines/.last-run
-?? src/shared/history-overview.ts
-?? tests/unit/history-overview.test.ts
+?? .wai/projects/atril/research/2026-04-21-committed-atril-ff3-as-6e078f0-add-wai-browse-an.md
 ```
 
 ### open_issues
 
 ```
-○ atril-itx ● P0 4.2: .wai overview and grouped browsing
-○ atril-ys5 ● P0 4.1: Failing tests for .wai detection and grouped artifact browsing
 ○ atril-2zt ● P2 6.1: Tidy shared repository-context and routing abstractions
 ○ atril-73c ● P2 6.3: Strict OpenSpec validation for add-unified-repo-reader
-○ atril-ff3 ● P2 4.3: Readable rendering for .wai artifacts with preserved repository context
 ○ atril-k6t ● P2 3.3: Issue-to-artifact navigation for resolvable references
 ○ atril-nit ● P2 5.3: Path-aware history from selected document or artifact view
 ○ atril-noh ● P2 6.2: Update README and supporting docs for unified repository reader UX
@@ -71,7 +59,7 @@ phase: implement
 ○ atril-oap ● P3 3.4: Manual validation for dense dependency graphs
 
 --------------------------------------------------------------------------------
-Total: 11 issues (11 open, 0 in progress)
+Total: 8 issues (8 open, 0 in progress)
 
 Status: ○ open  ◐ in_progress  ● blocked  ✓ closed  ❄ deferred
 ```
