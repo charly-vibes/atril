@@ -80,3 +80,59 @@ describe("round-trip", () => {
     expect(parsed?.target).toEqual(target);
   });
 });
+
+describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () => {
+  const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
+
+  test("builds a focused dependency route that preserves repository context beyond graph mode", () => {
+    const params = buildRoute(
+      ctx,
+      { view: "beads", mode: "focus", issueId: "atril-3x9" } as any,
+    );
+
+    expect(params).toBe(
+      "?owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9",
+    );
+  });
+
+  test("parses a focused dependency route for a selected issue neighborhood", () => {
+    const params = new URLSearchParams(
+      "owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9",
+    );
+    const route = parseRoute(params) as any;
+
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "beads", mode: "focus", issueId: "atril-3x9" },
+    });
+  });
+
+  test("preserves selected issue context when a dependency reference is missing so the UI can show a fallback message", () => {
+    const params = new URLSearchParams(
+      "owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9&missingDependency=atril-404",
+    );
+    const route = parseRoute(params) as any;
+
+    expect(route).toEqual({
+      context: ctx,
+      target: {
+        view: "beads",
+        mode: "focus",
+        issueId: "atril-3x9",
+        missingDependencyId: "atril-404",
+      },
+    });
+  });
+
+  test("falls back to graph mode when a focused dependency route has no selected issue", () => {
+    const params = new URLSearchParams(
+      "owner=acme&repo=widgets&branch=main&view=beads&mode=focus",
+    );
+    const route = parseRoute(params) as any;
+
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "beads", mode: "graph" },
+    });
+  });
+});

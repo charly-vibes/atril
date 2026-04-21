@@ -11,8 +11,8 @@
 - [x] 2.4 Verify graceful fallback for unresolved links and missing targets
 
 ## 3. beads dependency exploration improvements
-- [ ] 3.1 Add failing tests for focused dependency inspection modes and missing dependency handling
-- [ ] 3.2 Implement at least one focused dependency view in addition to the existing graph mode
+- [x] 3.1 Add failing tests for focused dependency inspection modes and missing dependency handling
+- [x] 3.2 Implement at least one focused dependency view in addition to the existing graph mode
 - [ ] 3.3 Add issue-to-artifact navigation for resolvable references
 - [ ] 3.4 Manually validate dependency readability on repositories with dense graphs
 
@@ -23,7 +23,7 @@
 - [ ] 4.4 Manually validate behavior on repositories without `.wai`
 
 ## 5. History reading mode
-- [ ] 5.1 Add failing tests for recent commit loading and path-specific history lookup
+- [x] 5.1 Add failing tests for recent commit loading and path-specific history lookup
 - [ ] 5.2 Implement history overview with recent commits and changed paths
 - [ ] 5.3 Implement path-aware history from a selected document or artifact view
 - [ ] 5.4 Validate caching and error handling under GitHub API rate-limit constraints
