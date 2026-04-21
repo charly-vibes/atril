@@ -190,6 +190,49 @@ button:hover {
   color: var(--color-muted);
 }
 
+#file-nav,
+#beads-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+#file-breadcrumb,
+#beads-breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+#file-content,
+#beads-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.beads-panel h3 {
+  font-family: var(--font-ui);
+  margin-bottom: 0.5rem;
+}
+
+.beads-panel p + p,
+.beads-panel ul,
+.beads-panel .warning {
+  margin-top: 0.75rem;
+}
+
+.beads-panel ul {
+  padding-left: 1.25rem;
+}
+
+.beads-panel .warning {
+  color: var(--color-error);
+  font-family: var(--font-ui);
+}
+
 /* Error screen */
 #error-screen {
   display: flex;

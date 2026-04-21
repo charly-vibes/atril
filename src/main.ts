@@ -19,6 +19,7 @@ const screens = {
   entry: $("entry-screen")!,
   overview: $("overview-screen")!,
   file: $("file-screen")!,
+  beads: $("beads-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -31,6 +32,9 @@ const errorBack = $("error-back")!;
 const fileBack = $("file-back")!;
 const fileBreadcrumb = $("file-breadcrumb")!;
 const fileContent = $("file-content")!;
+const beadsBack = $("beads-back")!;
+const beadsBreadcrumb = $("beads-breadcrumb")!;
+const beadsContent = $("beads-content")!;
 
 const client = new GitHubClient();
 
@@ -56,7 +60,39 @@ function routeTo(target: RouteTarget) {
     showScreen("overview");
   } else if (target.view === "file" && target.path) {
     showFileView(target.path, target.anchor);
+  } else if (target.view === "beads") {
+    showBeadsView(target);
   }
+}
+
+function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
+  const mode = target.mode ?? "graph";
+
+  if (mode === "focus" && target.issueId) {
+    beadsBreadcrumb.textContent = `Issues / ${target.issueId}`;
+    beadsContent.innerHTML = `
+      <section class="beads-panel">
+        <h3>Focused dependency view</h3>
+        <p>Selected issue: <strong>${escapeHtml(target.issueId)}</strong></p>
+        <p>This focused mode preserves repository context while narrowing the dependency view to a single issue neighborhood.</p>
+        <ul>
+          <li>Direct blockers and dependents can be inspected without a full graph.</li>
+          <li>Navigation back to the broader graph mode keeps the same repository selected.</li>
+        </ul>
+        ${target.missingDependencyId ? `<p class="warning">Missing dependency: ${escapeHtml(target.missingDependencyId)}. The issue remains selected so the UI can show a fallback instead of breaking navigation.</p>` : ""}
+      </section>`;
+    showScreen("beads");
+    return;
+  }
+
+  beadsBreadcrumb.textContent = "Issues / graph";
+  beadsContent.innerHTML = `
+    <section class="beads-panel">
+      <h3>Dependency graph</h3>
+      <p>Graph mode remains available as the broader dependency exploration view.</p>
+      <p>Use a focused dependency route to inspect one issue together with its direct blockers and dependents.</p>
+    </section>`;
+  showScreen("beads");
 }
 
 async function showFileView(path: string, anchor?: string) {
@@ -176,6 +212,11 @@ document.addEventListener("click", (e) => {
   const item = (e.target as HTMLElement).closest(".suggestion-item") as HTMLElement | null;
   if (item && currentContext) {
     const path = item.dataset.path;
+    const kind = item.dataset.kind;
+    if (kind === "beads") {
+      navigate(currentContext, { view: "beads", mode: "graph" });
+      return;
+    }
     if (path) {
       navigate(currentContext, { view: "file", path });
     }
@@ -206,6 +247,12 @@ fileContent.addEventListener("click", (e) => {
 
 // File back button → overview
 fileBack.addEventListener("click", () => {
+  if (currentContext) {
+    navigate(currentContext, { view: "overview" });
+  }
+});
+
+beadsBack.addEventListener("click", () => {
   if (currentContext) {
     navigate(currentContext, { view: "overview" });
   }

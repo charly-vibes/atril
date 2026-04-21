@@ -5,14 +5,18 @@ export interface RepoContext {
   branch: string;
 }
 
-export type ViewType = "overview" | "file";
+export type ViewType = "overview" | "file" | "beads";
+export type BeadsMode = "graph" | "focus";
 
-/** Navigation target within a repository. */
-export interface RouteTarget {
-  view: ViewType;
-  path?: string;
-  anchor?: string;
-}
+export type RouteTarget =
+  | { view: "overview" }
+  | { view: "file"; path?: string; anchor?: string }
+  | {
+      view: "beads";
+      mode?: BeadsMode;
+      issueId?: string;
+      missingDependencyId?: string;
+    };
 
 /** A fully resolved route: context + target. */
 export interface Route {
@@ -24,7 +28,8 @@ interface BuildOptions {
   omitDefaultBranch?: string;
 }
 
-const VALID_VIEWS = new Set<ViewType>(["overview", "file"]);
+const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads"]);
+const VALID_BEADS_MODES = new Set<BeadsMode>(["graph", "focus"]);
 
 /**
  * Build a URL query string from a repo context and route target.
@@ -42,8 +47,18 @@ export function buildRoute(
     params.set("branch", ctx.branch);
   }
   params.set("view", target.view);
-  if (target.path) params.set("path", target.path);
-  if (target.anchor) params.set("anchor", target.anchor);
+  if (target.view === "file") {
+    if (target.path) params.set("path", target.path);
+    if (target.anchor) params.set("anchor", target.anchor);
+  }
+  if (target.view === "beads") {
+    const mode = target.mode ?? "graph";
+    params.set("mode", mode);
+    if (target.issueId) params.set("issue", target.issueId);
+    if (target.missingDependencyId) {
+      params.set("missingDependency", target.missingDependencyId);
+    }
+  }
   return "?" + params.toString();
 }
 
@@ -62,13 +77,38 @@ export function parseRoute(params: URLSearchParams): Route | null {
   if (!VALID_VIEWS.has(view)) return null;
 
   const context: RepoContext = { owner, repo, branch };
-  const target: RouteTarget = { view };
 
-  const path = params.get("path");
-  if (path) target.path = path;
+  if (view === "file") {
+    const target: RouteTarget = { view };
+    const path = params.get("path");
+    if (path) target.path = path;
 
-  const anchor = params.get("anchor");
-  if (anchor) target.anchor = anchor;
+    const anchor = params.get("anchor");
+    if (anchor) target.anchor = anchor;
 
-  return { context, target };
+    return { context, target };
+  }
+
+  if (view === "beads") {
+    const requestedMode = (params.get("mode") ?? "graph") as BeadsMode;
+    const mode = VALID_BEADS_MODES.has(requestedMode) ? requestedMode : "graph";
+    const issueId = params.get("issue") ?? undefined;
+    const missingDependencyId = params.get("missingDependency") ?? undefined;
+
+    if (mode === "focus" && issueId) {
+      return {
+        context,
+        target: {
+          view,
+          mode,
+          issueId,
+          ...(missingDependencyId ? { missingDependencyId } : {}),
+        },
+      };
+    }
+
+    return { context, target: { view, mode: "graph" } };
+  }
+
+  return { context, target: { view: "overview" } };
 }
