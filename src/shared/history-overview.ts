@@ -28,7 +28,7 @@ export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: stri
       const changedPaths = commit.changedPaths?.length
         ? `<ul class="changed-paths">${commit.changedPaths
             .slice(0, 5)
-            .map((changedPath) => `<li>${escapeHtml(changedPath)}</li>`)
+            .map((changedPath) => `<li><button type="button" class="changed-path-link" data-path="${escapeHtml(changedPath)}">${escapeHtml(changedPath)}</button></li>`)
             .join("")}</ul>`
         : `<p class="changed-paths-empty">Changed paths unavailable for this commit.</p>`;
 

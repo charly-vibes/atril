@@ -36,6 +36,7 @@ const errorMessage = $("error-message")!;
 const errorBack = $("error-back")!;
 const fileBack = $("file-back")!;
 const fileBreadcrumb = $("file-breadcrumb")!;
+const fileHistory = $("file-history")!;
 const fileContent = $("file-content")!;
 const beadsBack = $("beads-back")!;
 const beadsBreadcrumb = $("beads-breadcrumb")!;
@@ -286,6 +287,15 @@ document.addEventListener("click", (e) => {
 });
 
 waiContent.addEventListener("click", (e) => {
+  const historyItem = (e.target as HTMLElement).closest(".wai-artifact-history") as HTMLElement | null;
+  if (historyItem) {
+    const path = historyItem.dataset.path;
+    if (path && currentContext) {
+      navigate(currentContext, { view: "history", path });
+    }
+    return;
+  }
+
   const item = (e.target as HTMLElement).closest(".wai-artifact-link") as HTMLElement | null;
   const path = item?.dataset.path;
   if (path && currentContext) {
@@ -313,6 +323,23 @@ fileContent.addEventListener("click", (e) => {
     // Let browser handle external links (opens in new tab via target)
   }
   // unresolved: do nothing, link stays inert
+});
+
+// File history button → path-specific history
+fileHistory.addEventListener("click", () => {
+  const path = fileBreadcrumb.textContent;
+  if (path && currentContext) {
+    navigate(currentContext, { view: "history", path });
+  }
+});
+
+// Changed path links in history view → path-specific history
+historyContent.addEventListener("click", (e) => {
+  const link = (e.target as HTMLElement).closest(".changed-path-link") as HTMLElement | null;
+  const path = link?.dataset.path;
+  if (path && currentContext) {
+    navigate(currentContext, { view: "history", path });
+  }
 });
 
 // File back button → overview

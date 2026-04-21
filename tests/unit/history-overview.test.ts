@@ -46,3 +46,34 @@ describe("renderHistoryOverview", () => {
     expect(html).toContain("Changed paths unavailable for this commit.");
   });
 });
+
+describe("path-aware navigation from history view (OpenSpec add-unified-repo-reader:5.3)", () => {
+  test("renders changed paths as navigable elements with data-path attributes", () => {
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: "Update docs",
+        authorName: "Sasha",
+        authoredAt: "2026-04-21T10:00:00Z",
+        changedPaths: ["src/main.ts", "docs/guide.md"],
+      },
+    ]);
+
+    expect(html).toContain('class="changed-path-link"');
+    expect(html).toContain('data-path="src/main.ts"');
+    expect(html).toContain('data-path="docs/guide.md"');
+  });
+
+  test("does not render navigable elements when changed paths are absent", () => {
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: "Refine docs",
+        authorName: "Charly",
+        authoredAt: "2026-04-21T09:30:00Z",
+      },
+    ]);
+
+    expect(html).not.toContain('class="changed-path-link"');
+  });
+});

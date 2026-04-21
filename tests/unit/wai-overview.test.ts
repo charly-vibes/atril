@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildWaiArtifactGroups } from "../../src/shared/wai-overview";
+import { buildWaiArtifactGroups, renderWaiOverview } from "../../src/shared/wai-overview";
 import type { GitHubTreeEntry } from "../../src/shared/github-api";
 
 function entry(path: string, type: "blob" | "tree" = "blob"): GitHubTreeEntry {
@@ -55,5 +55,22 @@ describe("buildWaiArtifactGroups (OpenSpec add-unified-repo-reader:4.1)", () => 
 
   test("returns no browse groups when .wai has only structural files", () => {
     expect(buildWaiArtifactGroups([entry(".wai", "tree"), entry(".wai/config.toml")])).toEqual([]);
+  });
+});
+
+describe("WAI artifact history navigation (OpenSpec add-unified-repo-reader:5.3)", () => {
+  test("renders a history action for each artifact alongside the existing file link", () => {
+    const groups = buildWaiArtifactGroups([
+      entry(".wai/projects/atril/research/2026-04-20-findings.md"),
+    ]);
+    const html = renderWaiOverview(groups);
+
+    expect(html).toContain('class="wai-artifact-history"');
+    expect(html).toContain('data-path=".wai/projects/atril/research/2026-04-20-findings.md"');
+  });
+
+  test("does not render history actions when no artifacts exist", () => {
+    const html = renderWaiOverview([]);
+    expect(html).not.toContain('class="wai-artifact-history"');
   });
 });

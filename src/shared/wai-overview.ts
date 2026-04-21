@@ -105,6 +105,7 @@ export function renderWaiOverview(groups: WaiArtifactGroup[]): string {
                       <span class="wai-artifact-name">${escapeHtml(path.split("/").pop() ?? path)}</span>
                       <span class="wai-artifact-path">${escapeHtml(path)}</span>
                     </button>
+                    <button type="button" class="wai-artifact-history" data-path="${escapeHtml(path)}">History</button>
                   </li>`,
               )
               .join("")}
