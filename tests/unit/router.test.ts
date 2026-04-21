@@ -81,6 +81,38 @@ describe("round-trip", () => {
   });
 });
 
+describe("history routes (OpenSpec add-unified-repo-reader:5.2)", () => {
+  const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
+
+  test("builds a repository history route that preserves repository context", () => {
+    const params = buildRoute(ctx, { view: "history" });
+    expect(params).toBe("?owner=acme&repo=widgets&branch=main&view=history");
+  });
+
+  test("builds a path-specific history route for later document-driven navigation", () => {
+    const params = buildRoute(ctx, { view: "history", path: "docs/guide.md" });
+    expect(params).toBe("?owner=acme&repo=widgets&branch=main&view=history&path=docs%2Fguide.md");
+  });
+
+  test("parses a repository history route", () => {
+    const route = parseRoute(new URLSearchParams("owner=acme&repo=widgets&branch=main&view=history"));
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "history" },
+    });
+  });
+
+  test("parses a path-specific history route", () => {
+    const route = parseRoute(
+      new URLSearchParams("owner=acme&repo=widgets&branch=main&view=history&path=docs/guide.md"),
+    );
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "history", path: "docs/guide.md" },
+    });
+  });
+});
+
 describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () => {
   const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
 
