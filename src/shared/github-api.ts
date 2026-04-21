@@ -12,6 +12,14 @@ export interface TreeResult {
   truncated: boolean;
 }
 
+export interface CommitHistoryEntry {
+  sha: string;
+  message: string;
+  authorName: string;
+  authoredAt: string;
+  changedPaths?: string[];
+}
+
 export class GitHubApiError extends Error {
   constructor(
     message: string,
@@ -65,6 +73,41 @@ export class GitHubClient {
     const text = await res.text();
     this.cache.set(key, text);
     return text;
+  }
+
+  async getCommitHistory(
+    owner: string,
+    repo: string,
+    ref: string,
+    path?: string,
+  ): Promise<CommitHistoryEntry[]> {
+    const key = `history:${owner}/${repo}:${ref}:${path ?? ""}`;
+    if (this.cache.has(key)) return this.cache.get(key) as CommitHistoryEntry[];
+
+    const params = new URLSearchParams({ sha: ref, per_page: "30" });
+    if (path) params.set("path", path);
+
+    const data = await this.apiFetch<
+      Array<{
+        sha: string;
+        commit: {
+          message: string;
+          author: { name: string; date: string };
+        };
+        files?: Array<{ filename: string }>;
+      }>
+    >(`${API_BASE}/repos/${owner}/${repo}/commits?${params.toString()}`);
+
+    const commits = data.map((entry) => ({
+      sha: entry.sha,
+      message: entry.commit.message,
+      authorName: entry.commit.author.name,
+      authoredAt: entry.commit.author.date,
+      ...(entry.files ? { changedPaths: entry.files.map((file) => file.filename) } : {}),
+    }));
+
+    this.cache.set(key, commits);
+    return commits;
   }
 
   private async apiFetch<T>(url: string): Promise<T> {

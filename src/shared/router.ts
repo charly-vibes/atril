@@ -5,7 +5,7 @@ export interface RepoContext {
   branch: string;
 }
 
-export type ViewType = "overview" | "file" | "beads";
+export type ViewType = "overview" | "file" | "beads" | "history";
 export type BeadsMode = "graph" | "focus";
 
 export type RouteTarget =
@@ -16,7 +16,8 @@ export type RouteTarget =
       mode?: BeadsMode;
       issueId?: string;
       missingDependencyId?: string;
-    };
+    }
+  | { view: "history"; path?: string };
 
 /** A fully resolved route: context + target. */
 export interface Route {
@@ -28,7 +29,7 @@ interface BuildOptions {
   omitDefaultBranch?: string;
 }
 
-const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads"]);
+const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history"]);
 const VALID_BEADS_MODES = new Set<BeadsMode>(["graph", "focus"]);
 
 /**
@@ -50,6 +51,9 @@ export function buildRoute(
   if (target.view === "file") {
     if (target.path) params.set("path", target.path);
     if (target.anchor) params.set("anchor", target.anchor);
+  }
+  if (target.view === "history") {
+    if (target.path) params.set("path", target.path);
   }
   if (target.view === "beads") {
     const mode = target.mode ?? "graph";
@@ -108,6 +112,11 @@ export function parseRoute(params: URLSearchParams): Route | null {
     }
 
     return { context, target: { view, mode: "graph" } };
+  }
+
+  if (view === "history") {
+    const path = params.get("path") ?? undefined;
+    return { context, target: path ? { view, path } : { view } };
   }
 
   return { context, target: { view: "overview" } };

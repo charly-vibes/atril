@@ -8,6 +8,7 @@ import {
 } from "./shared/repo-overview";
 import { resolveLink } from "./shared/link-resolver";
 import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
+import { renderHistoryOverview } from "./shared/history-overview";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -20,6 +21,7 @@ const screens = {
   overview: $("overview-screen")!,
   file: $("file-screen")!,
   beads: $("beads-screen")!,
+  history: $("history-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -35,6 +37,9 @@ const fileContent = $("file-content")!;
 const beadsBack = $("beads-back")!;
 const beadsBreadcrumb = $("beads-breadcrumb")!;
 const beadsContent = $("beads-content")!;
+const historyBack = $("history-back")!;
+const historyBreadcrumb = $("history-breadcrumb")!;
+const historyContent = $("history-content")!;
 
 const client = new GitHubClient();
 
@@ -62,6 +67,8 @@ function routeTo(target: RouteTarget) {
     showFileView(target.path, target.anchor);
   } else if (target.view === "beads") {
     showBeadsView(target);
+  } else if (target.view === "history") {
+    showHistoryView(target.path);
   }
 }
 
@@ -93,6 +100,31 @@ function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
       <p>Use a focused dependency route to inspect one issue together with its direct blockers and dependents.</p>
     </section>`;
   showScreen("beads");
+}
+
+async function showHistoryView(path?: string) {
+  if (!currentContext) return;
+  showScreen("loading");
+
+  historyBreadcrumb.textContent = path ? `History / ${path}` : "History / recent commits";
+
+  try {
+    const commits = await client.getCommitHistory(
+      currentContext.owner,
+      currentContext.repo,
+      currentContext.branch,
+      path,
+    );
+    historyContent.innerHTML = renderHistoryOverview(commits, path);
+    showScreen("history");
+  } catch (err) {
+    if (err instanceof GitHubApiError) {
+      errorMessage.textContent = err.message;
+    } else {
+      errorMessage.textContent = "Failed to load history.";
+    }
+    showScreen("error");
+  }
 }
 
 async function showFileView(path: string, anchor?: string) {
@@ -143,6 +175,9 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
         `<span class="source-badge" data-active="${sources[key]}">${label}</span>`,
     )
     .join("");
+
+  const overviewActions = $("overview-actions")!;
+  overviewActions.innerHTML = `<button id="open-history" type="button">Open history</button>`;
 
   const suggestionsEl = $("overview-suggestions")!;
   const emptyEl = $("overview-empty")!;
@@ -223,6 +258,13 @@ document.addEventListener("click", (e) => {
   }
 });
 
+document.addEventListener("click", (e) => {
+  const historyButton = (e.target as HTMLElement).closest("#open-history");
+  if (historyButton && currentContext) {
+    navigate(currentContext, { view: "history" });
+  }
+});
+
 // Link clicks within file content → resolve and navigate
 fileContent.addEventListener("click", (e) => {
   const link = (e.target as HTMLElement).closest("a") as HTMLAnchorElement | null;
@@ -253,6 +295,12 @@ fileBack.addEventListener("click", () => {
 });
 
 beadsBack.addEventListener("click", () => {
+  if (currentContext) {
+    navigate(currentContext, { view: "overview" });
+  }
+});
+
+historyBack.addEventListener("click", () => {
   if (currentContext) {
     navigate(currentContext, { view: "overview" });
   }
