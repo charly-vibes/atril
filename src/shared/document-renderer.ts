@@ -1,11 +1,13 @@
+import { marked, Renderer } from "marked";
 import { escapeHtml } from "./html-utils";
 
-function renderInlineMarkdown(text: string): string {
-  const escaped = escapeHtml(text);
-  return escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
-    return `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
-  });
-}
+const renderer = new Renderer();
+renderer.heading = ({ text, depth }) => {
+  const id = slugifyHeading(text);
+  return `<h${depth} id="${escapeHtml(id)}">${text}</h${depth}>\n`;
+};
+
+marked.setOptions({ async: false, gfm: true, breaks: false, renderer });
 
 function renderInlineOrg(text: string): string {
   const escaped = escapeHtml(text);
@@ -19,20 +21,6 @@ function slugifyHeading(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function renderMarkdown(content: string): string {
-  const blocks = content.trim().split(/\n\s*\n/);
-  return blocks
-    .map((block) => {
-      const line = block.trim();
-      if (line.startsWith("# ")) {
-        const heading = line.slice(2).trim();
-        return `<h1 id="${escapeHtml(slugifyHeading(heading))}">${escapeHtml(heading)}</h1>`;
-      }
-      return `<p>${renderInlineMarkdown(line.replace(/\n+/g, " "))}</p>`;
-    })
-    .join("");
 }
 
 function renderOrg(content: string): string {
@@ -50,7 +38,7 @@ function renderOrg(content: string): string {
 
 export function renderReadableDocument(path: string, content: string): string {
   if (path.endsWith(".md")) {
-    return renderMarkdown(content);
+    return marked.parse(content) as string;
   }
 
   if (path.endsWith(".org")) {

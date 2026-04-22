@@ -8,11 +8,11 @@ Reads openspec documents from GitHub repositories and renders them with clean ty
 
 ### Requirement: Document Rendering
 
-The system SHALL render Markdown, YAML, JSON, and TOML files from GitHub repositories with clean typography.
+The system SHALL render Markdown, YAML, JSON, and TOML files from GitHub repositories with clean typography. Markdown rendering uses a GFM-compliant parser (marked) for full GitHub Flavored Markdown support.
 
 #### Scenario: Render Markdown file
 - **WHEN** a user navigates to a Markdown file in a repository
-- **THEN** the system renders the Markdown with proper heading hierarchy, code blocks, lists, and inline formatting
+- **THEN** the system renders the Markdown with proper heading hierarchy (h1-h6 with stable IDs), code blocks, lists, tables, blockquotes, inline formatting (bold, italic, inline code), links, and images
 
 #### Scenario: Render structured data files
 - **WHEN** a user navigates to a YAML, JSON, or TOML file

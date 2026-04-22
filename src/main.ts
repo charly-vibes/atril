@@ -404,6 +404,29 @@ window.addEventListener("popstate", () => {
   }
 });
 
+// Theme toggle
+const themeToggle = $("theme-toggle")!;
+
+function applyTheme(theme: "light" | "dark" | "auto") {
+  document.documentElement.removeAttribute("data-theme");
+  if (theme !== "auto") {
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+  themeToggle.textContent = theme === "dark" ? "Light" : theme === "light" ? "Dark" : "Auto";
+}
+
+const savedTheme = localStorage.getItem("atril-theme") as "light" | "dark" | null;
+applyTheme(savedTheme ?? "auto");
+
+themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  const isDark = current === "dark" ||
+    (!current && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const next = isDark ? "light" : "dark";
+  localStorage.setItem("atril-theme", next);
+  applyTheme(next);
+});
+
 // On page load, check for existing route in URL
 const initialRoute = parseRoute(new URLSearchParams(location.search));
 if (initialRoute) {

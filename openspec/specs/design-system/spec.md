@@ -14,27 +14,35 @@ The system SHALL use Source Serif 4 for body text, JetBrains Mono for code, and 
 
 ### Requirement: Color Palette
 
-The system SHALL use a warm color palette across all viewers, defined as a set of CSS custom properties (design tokens) covering primary, accent, background, surface, and text colors.
+The system SHALL use a warm, low-contrast color palette across all viewers, defined as CSS custom properties covering background, surface, foreground, muted, accent, error, and border colors. The palette prioritizes reduced eye strain for long reading sessions.
 
 #### Scenario: Consistent palette
 - **WHEN** any viewer renders
-- **THEN** all colors are drawn from the shared CSS custom properties, not ad hoc hex/rgb values
+- **THEN** all colors are drawn from the shared CSS custom properties (`--color-bg`, `--color-surface`, `--color-fg`, `--color-muted`, `--color-accent`, `--color-error`, `--color-border`), not ad hoc hex/rgb values
 
 #### Scenario: Palette definition
 - **WHEN** a developer inspects the CSS
-- **THEN** color values are defined as custom properties (e.g., `--color-primary`, `--color-bg`) in a single root declaration
+- **THEN** color values are defined as custom properties in a single `:root` declaration, with light mode using warm ivory tones and dark mode using warm charcoal tones
 
 ### Requirement: Theme Support
 
-The system SHALL support dark and light themes.
-
-#### Scenario: Toggle theme
-- **WHEN** a user switches between dark and light theme
-- **THEN** all UI elements, typography, and content areas update to the selected theme
+The system SHALL support dark and light themes via both automatic OS detection and a manual toggle.
 
 #### Scenario: Respect system preference
-- **WHEN** no explicit theme is selected
-- **THEN** the system defaults to the user's OS-level color scheme preference
+- **WHEN** no manual theme has been selected
+- **THEN** the system automatically applies the theme matching the user's OS preference via `@media (prefers-color-scheme)`
+
+#### Scenario: Manual theme toggle
+- **WHEN** a user clicks the theme toggle button
+- **THEN** the system switches between dark and light themes, persists the choice in `localStorage`, and applies it immediately via a `data-theme` attribute on the root element
+
+#### Scenario: Persisted theme preference
+- **WHEN** a user returns to atril after previously selecting a theme
+- **THEN** the system applies the saved theme preference from `localStorage` instead of the OS default
+
+#### Scenario: Theme consistency
+- **WHEN** the theme changes (via toggle or OS preference)
+- **THEN** all CSS custom properties update and all surfaces, borders, and text colors reflect the active theme
 
 ### Requirement: Tablet-Optimized Layout
 
