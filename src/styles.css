@@ -165,24 +165,23 @@ button:hover {
 #overview-sources {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem 0.5rem;
   margin-bottom: 1.25rem;
 }
 
 .source-badge {
   font-family: var(--font-ui);
-  font-size: 0.8rem;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-muted);
+  font-size: 0.7rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .source-badge[data-active="true"] {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+  color: var(--color-muted);
 }
 
 #overview-actions {
