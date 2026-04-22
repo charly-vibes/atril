@@ -289,6 +289,26 @@ button:hover {
   text-align: left;
 }
 
+.breadcrumb-seg {
+  display: inline;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.breadcrumb-seg:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-sep {
+  color: var(--color-muted);
+  margin: 0 0.1rem;
+}
+
 #file-nav button,
 #beads-nav button,
 #history-nav button,

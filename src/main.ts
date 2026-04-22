@@ -152,7 +152,11 @@ async function showHistoryView(path?: string) {
   if (!currentContext) return;
   showScreen("loading");
 
-  historyBreadcrumb.textContent = path ? `History / ${path}` : "History / recent commits";
+  if (path) {
+    historyBreadcrumb.innerHTML = `History / ${renderBreadcrumb(path)}`;
+  } else {
+    historyBreadcrumb.textContent = "History / recent commits";
+  }
 
   try {
     const commits = await client.getCommitHistory(
@@ -250,11 +254,24 @@ function renderSearchResults(query: string) {
     .join("")}</ul>`;
 }
 
+function renderBreadcrumb(path: string): string {
+  const parts = path.split("/");
+  if (parts.length <= 1) return escapeHtml(path);
+
+  const segments: string[] = [];
+  for (let i = 0; i < parts.length - 1; i++) {
+    const dirPath = parts.slice(0, i + 1).join("/");
+    segments.push(`<button class="breadcrumb-seg" data-dir="${escapeHtml(dirPath)}">${escapeHtml(parts[i])}</button>`);
+  }
+  segments.push(`<span>${escapeHtml(parts[parts.length - 1])}</span>`);
+  return segments.join('<span class="breadcrumb-sep">/</span>');
+}
+
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   showScreen("loading");
 
-  fileBreadcrumb.textContent = path;
+  fileBreadcrumb.innerHTML = renderBreadcrumb(path);
 
   try {
     const content = await client.getFileContent(
@@ -300,7 +317,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
     .join("");
 
   const overviewActions = $("overview-actions")!;
-  overviewActions.innerHTML = `<button id="open-tree" type="button">Browse files</button> <button id="open-history" type="button">Open history</button>`;
+  overviewActions.innerHTML = "";
 
   const suggestionsEl = $("overview-suggestions")!;
   const emptyEl = $("overview-empty")!;
@@ -322,6 +339,14 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
               </li>`,
           )
           .join("")}
+        <li class="suggestion-item" data-kind="history">
+          <span class="label">Recent history</span>
+          <span class="path">Latest commits across the repository</span>
+        </li>
+        <li class="suggestion-item" data-kind="tree">
+          <span class="label">Browse all files</span>
+          <span class="path">Search and explore the repository tree</span>
+        </li>
       </ul>`;
   }
 }
@@ -379,22 +404,24 @@ document.addEventListener("click", (e) => {
       navigate(currentContext, { view: "wai" });
       return;
     }
+    if (kind === "docs") {
+      navigate(currentContext, { view: "tree", search: "docs" });
+      return;
+    }
+    if (kind === "tree") {
+      navigate(currentContext, { view: "tree" });
+      return;
+    }
+    if (kind === "history") {
+      navigate(currentContext, { view: "history" });
+      return;
+    }
     if (path) {
       navigate(currentContext, { view: "file", path });
     }
   }
 });
 
-document.addEventListener("click", (e) => {
-  const historyButton = (e.target as HTMLElement).closest("#open-history");
-  if (historyButton && currentContext) {
-    navigate(currentContext, { view: "history" });
-  }
-  const treeButton = (e.target as HTMLElement).closest("#open-tree");
-  if (treeButton && currentContext) {
-    navigate(currentContext, { view: "tree" });
-  }
-});
 
 waiContent.addEventListener("click", (e) => {
   const historyItem = (e.target as HTMLElement).closest(".wai-artifact-history") as HTMLElement | null;
@@ -434,6 +461,17 @@ fileContent.addEventListener("click", (e) => {
   }
   // unresolved: do nothing, link stays inert
 });
+
+// Breadcrumb directory segments → navigate to tree
+for (const el of [fileBreadcrumb, historyBreadcrumb]) {
+  el.addEventListener("click", (e) => {
+    const seg = (e.target as HTMLElement).closest(".breadcrumb-seg") as HTMLElement | null;
+    if (seg && currentContext) {
+      const dir = seg.dataset.dir;
+      if (dir) navigate(currentContext, { view: "tree", search: dir });
+    }
+  });
+}
 
 // File history button → path-specific history
 fileHistory.addEventListener("click", () => {
