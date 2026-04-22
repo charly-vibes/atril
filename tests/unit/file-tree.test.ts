@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   buildFileTree,
   fuzzyFilterEntries,
+  filterRelevantEntries,
   type TreeNode,
 } from "../../src/shared/file-tree";
 import type { GitHubTreeEntry } from "../../src/shared/github-api";
@@ -161,5 +162,71 @@ describe("fuzzyFilterEntries", () => {
   test("limits results", () => {
     const results = fuzzyFilterEntries("s", entries, 2);
     expect(results).toHaveLength(2);
+  });
+});
+
+describe("filterRelevantEntries", () => {
+  test("includes .wai/ and openspec/ content", () => {
+    const entries = [
+      dir(".wai"),
+      blob(".wai/config.toml"),
+      dir("openspec"),
+      blob("openspec/project.md"),
+      dir("src"),
+      blob("src/main.ts"),
+    ];
+    const filtered = filterRelevantEntries(entries);
+    expect(filtered.map((e) => e.path)).toEqual([
+      ".wai",
+      ".wai/config.toml",
+      "openspec",
+      "openspec/project.md",
+    ]);
+  });
+
+  test("includes docs/ content", () => {
+    const entries = [
+      dir("docs"),
+      blob("docs/tutorial.md"),
+      blob("docs/guide.md"),
+    ];
+    const filtered = filterRelevantEntries(entries);
+    expect(filtered).toHaveLength(3);
+  });
+
+  test("includes top-level .md files", () => {
+    const entries = [
+      blob("README.md"),
+      blob("CLAUDE.md"),
+      blob("package.json"),
+      blob("src/main.ts"),
+    ];
+    const filtered = filterRelevantEntries(entries);
+    expect(filtered.map((e) => e.path)).toEqual(["README.md", "CLAUDE.md"]);
+  });
+
+  test("excludes nested .md files outside relevant dirs", () => {
+    const entries = [
+      blob("src/notes.md"),
+      blob("README.md"),
+    ];
+    const filtered = filterRelevantEntries(entries);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].path).toBe("README.md");
+  });
+
+  test("excludes .beads, .github, src, tests, etc.", () => {
+    const entries = [
+      dir(".beads"),
+      blob(".beads/issues.jsonl"),
+      dir(".github"),
+      blob(".github/workflows/ci.yml"),
+      dir("src"),
+      blob("src/main.ts"),
+      dir("tests"),
+      blob("tests/unit/foo.test.ts"),
+    ];
+    const filtered = filterRelevantEntries(entries);
+    expect(filtered).toHaveLength(0);
   });
 });

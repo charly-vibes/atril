@@ -7,6 +7,24 @@ export interface TreeNode {
   children?: TreeNode[];
 }
 
+const VISIBLE_PREFIXES = [".wai/", "openspec/", "docs/"];
+const MD_PATTERN = /\.md$/i;
+
+/**
+ * Filter entries to knowledge-relevant paths:
+ * .wai/, openspec/, docs/, and top-level markdown files.
+ */
+export function filterRelevantEntries(entries: GitHubTreeEntry[]): GitHubTreeEntry[] {
+  return entries.filter((e) => {
+    for (const prefix of VISIBLE_PREFIXES) {
+      if (e.path === prefix.slice(0, -1) || e.path.startsWith(prefix)) return true;
+    }
+    // Top-level .md files (no slash in path)
+    if (!e.path.includes("/") && e.type === "blob" && MD_PATTERN.test(e.path)) return true;
+    return false;
+  });
+}
+
 /**
  * Build a hierarchical tree from a flat list of GitHub tree entries.
  * Directories come before files; both sorted alphabetically.

@@ -13,7 +13,7 @@ import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
-import { buildFileTree, fuzzyFilterEntries, type TreeNode } from "./shared/file-tree";
+import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries, type TreeNode } from "./shared/file-tree";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -200,7 +200,8 @@ function showTreeView(search?: string) {
 
 function renderTreeNodes() {
   if (!currentTree) return;
-  const tree = buildFileTree(currentTree.entries);
+  const filtered = filterRelevantEntries(currentTree.entries);
+  const tree = buildFileTree(filtered);
   treeContent.innerHTML = `<ul class="tree-list">${renderTreeLevel(tree)}</ul>`;
 }
 
@@ -229,7 +230,8 @@ function renderTreeLevel(nodes: TreeNode[]): string {
 
 function renderSearchResults(query: string) {
   if (!currentTree) return;
-  const results = fuzzyFilterEntries(query, currentTree.entries);
+  const filtered = filterRelevantEntries(currentTree.entries);
+  const results = fuzzyFilterEntries(query, filtered);
 
   if (results.length === 0) {
     treeContent.innerHTML = `<p class="tree-empty">No files matching "${escapeHtml(query)}"</p>`;
