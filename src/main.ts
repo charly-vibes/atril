@@ -57,6 +57,7 @@ const client = new GitHubClient();
 /** Current repo context, set after initial load. */
 let currentContext: RepoContext | null = null;
 let currentTree: TreeResult | null = null;
+let navDepth = 0;
 
 function showScreen(name: keyof typeof screens) {
   for (const [key, el] of Object.entries(screens)) {
@@ -67,6 +68,7 @@ function showScreen(name: keyof typeof screens) {
 function navigate(ctx: RepoContext, target: RouteTarget) {
   const url = buildRoute(ctx, target);
   history.pushState(null, "", url);
+  navDepth++;
   currentContext = ctx;
   routeTo(target);
 }
@@ -495,10 +497,12 @@ treeContent.addEventListener("click", (e) => {
   }
 });
 
-// Back buttons → overview
+// Back buttons → go back in history (preserves tree → file → back = tree)
 for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack]) {
   btn.addEventListener("click", () => {
-    if (currentContext) {
+    if (navDepth > 0) {
+      history.back();
+    } else if (currentContext) {
       navigate(currentContext, { view: "overview" });
     }
   });
@@ -512,6 +516,7 @@ errorBack.addEventListener("click", () => {
 
 // Browser back/forward → re-route
 window.addEventListener("popstate", () => {
+  if (navDepth > 0) navDepth--;
   const route = parseRoute(new URLSearchParams(location.search));
   if (route) {
     currentContext = route.context;
