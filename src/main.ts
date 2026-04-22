@@ -350,11 +350,10 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
           <span class="label">Recent history</span>
           <span class="path">Latest commits across the repository</span>
         </li>
-        <li class="suggestion-item" data-kind="tree">
-          <span class="label">Browse all files</span>
-          <span class="path">Search and explore the repository tree</span>
-        </li>
-      </ul>`;
+      </ul>
+      <div class="overview-search-container">
+        <input id="overview-search" type="text" placeholder="Search files…" autocomplete="off" />
+      </div>`;
   }
 }
 
@@ -395,6 +394,16 @@ form.addEventListener("submit", (e) => {
   }
   repoError.textContent = "";
   loadRepo(ref);
+});
+
+// Overview search → navigate to tree with query
+document.addEventListener("input", (e) => {
+  const searchInput = e.target as HTMLInputElement;
+  if (searchInput.id !== "overview-search" || !currentContext) return;
+  const query = searchInput.value.trim();
+  if (query) {
+    navigate(currentContext, { view: "tree", search: query });
+  }
 });
 
 // Branch toggle → show input, submit → reload with new branch
