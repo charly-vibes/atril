@@ -529,33 +529,62 @@ button:hover {
   font-size: 0.9rem;
 }
 
-.wai-group h3 {
+.wai-group {
+  margin-top: 0.25rem;
+}
+
+.wai-group .wai-group {
+  padding-left: 0.75rem;
+}
+
+.wai-summary {
   font-family: var(--font-ui);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  list-style: none;
+}
+
+.wai-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wai-summary::before {
+  content: "▶";
+  font-size: 0.6rem;
+  color: var(--color-muted);
+  transition: transform 0.15s;
+}
+
+details[open] > .wai-summary::before {
+  transform: rotate(90deg);
+}
+
+.wai-summary-h3 {
   font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  padding: 0.4rem 0;
 }
 
-.wai-group h4 {
-  font-family: var(--font-ui);
+.wai-summary-h4 {
   font-size: 0.95rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.35rem;
-  color: var(--color-fg);
+  font-weight: 500;
 }
 
-.wai-group h5 {
-  font-family: var(--font-ui);
+.wai-summary-h5 {
   font-size: 0.8rem;
   font-weight: 500;
-  margin-top: 0.5rem;
-  margin-bottom: 0.25rem;
   color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.wai-group .wai-group {
-  padding-left: 0.5rem;
+.wai-count {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  font-weight: 400;
 }
 
 .wai-artifact-list {

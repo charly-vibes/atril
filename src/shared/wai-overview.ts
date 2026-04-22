@@ -199,17 +199,31 @@ function renderArtifactList(paths: string[]): string {
   </ul>`;
 }
 
+function countPaths(group: WaiArtifactGroup): number {
+  let total = group.paths.length;
+  if (group.children) {
+    for (const child of group.children) total += countPaths(child);
+  }
+  return total;
+}
+
 function renderGroup(group: WaiArtifactGroup, headingLevel: "h3" | "h4" | "h5"): string {
   const childHtml = group.children
     ? group.children.map((child) => renderGroup(child, headingLevel === "h3" ? "h4" : "h5")).join("")
     : "";
 
+  const count = countPaths(group);
+  const tag = headingLevel;
+
   return `
-    <section class="wai-group" data-group-id="${escapeHtml(group.id)}">
-      <${headingLevel}>${escapeHtml(group.label)}</${headingLevel}>
+    <details class="wai-group" data-group-id="${escapeHtml(group.id)}">
+      <summary class="wai-summary wai-summary-${tag}">
+        <span>${escapeHtml(group.label)}</span>
+        <span class="wai-count">${count}</span>
+      </summary>
       ${renderArtifactList(group.paths)}
       ${childHtml}
-    </section>`;
+    </details>`;
 }
 
 export function renderWaiOverview(groups: WaiArtifactGroup[]): string {

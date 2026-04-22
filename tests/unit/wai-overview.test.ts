@@ -72,15 +72,17 @@ describe("renderWaiOverview", () => {
     expect(html).not.toContain('class="wai-artifact-name">2026');
   });
 
-  test("renders nested PARA headings", () => {
+  test("renders collapsible PARA sections with counts", () => {
     const groups = buildWaiArtifactGroups([
       entry(".wai/projects/atril/research/2026-04-20-findings.md"),
     ]);
     const html = renderWaiOverview(groups);
 
-    expect(html).toContain("<h3>Projects</h3>");
-    expect(html).toContain("<h4>atril</h4>");
-    expect(html).toContain("<h5>Research</h5>");
+    expect(html).toContain("<span>Projects</span>");
+    expect(html).toContain("<span>atril</span>");
+    expect(html).toContain("<span>Research</span>");
+    expect(html).toContain('class="wai-count">1</span>');
+    expect(html).toContain("<details");
   });
 
   test("renders empty state when no artifacts", () => {
