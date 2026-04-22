@@ -262,9 +262,9 @@ function renderBreadcrumb(path: string): string {
   const segments: string[] = [];
   for (let i = 0; i < parts.length - 1; i++) {
     const dirPath = parts.slice(0, i + 1).join("/");
-    segments.push(`<button class="breadcrumb-seg" data-dir="${escapeHtml(dirPath)}">${escapeHtml(parts[i])}</button>`);
+    segments.push(`<button class="breadcrumb-seg" data-dir="${escapeHtml(dirPath)}">${escapeHtml(parts[i]!)}</button>`);
   }
-  segments.push(`<span>${escapeHtml(parts[parts.length - 1])}</span>`);
+  segments.push(`<span>${escapeHtml(parts[parts.length - 1]!)}</span>`);
   return segments.join('<span class="breadcrumb-sep">/</span>');
 }
 
