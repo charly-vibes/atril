@@ -13,6 +13,7 @@ import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
+import { buildFileTree, fuzzyFilterEntries, type TreeNode } from "./shared/file-tree";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -23,6 +24,7 @@ const screens = {
   beads: $("beads-screen")!,
   history: $("history-screen")!,
   wai: $("wai-screen")!,
+  tree: $("tree-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -45,6 +47,10 @@ const historyContent = $("history-content")!;
 const waiBack = $("wai-back")!;
 const waiBreadcrumb = $("wai-breadcrumb")!;
 const waiContent = $("wai-content")!;
+const treeBack = $("tree-back")!;
+const treeBreadcrumb = $("tree-breadcrumb")!;
+const treeSearch = $("tree-search") as HTMLInputElement;
+const treeContent = $("tree-content")!;
 
 const client = new GitHubClient();
 
@@ -76,6 +82,8 @@ function routeTo(target: RouteTarget) {
     showHistoryView(target.path);
   } else if (target.view === "wai") {
     showWaiView();
+  } else if (target.view === "tree") {
+    showTreeView(target.search);
   }
 }
 
@@ -171,6 +179,73 @@ function showWaiView() {
   showScreen("wai");
 }
 
+function showTreeView(search?: string) {
+  if (!currentContext || !currentTree) return;
+
+  treeBreadcrumb.textContent = `${currentContext.owner}/${currentContext.repo}`;
+  treeSearch.value = search ?? "";
+
+  if (search) {
+    renderSearchResults(search);
+  } else {
+    renderTreeNodes();
+  }
+
+  showScreen("tree");
+
+  if (!search) treeSearch.focus();
+}
+
+function renderTreeNodes() {
+  if (!currentTree) return;
+  const tree = buildFileTree(currentTree.entries);
+  treeContent.innerHTML = `<ul class="tree-list">${renderTreeLevel(tree)}</ul>`;
+}
+
+function renderTreeLevel(nodes: TreeNode[]): string {
+  return nodes
+    .map((node) => {
+      if (node.type === "tree") {
+        const children = node.children ?? [];
+        return `<li>
+          <div class="tree-item" data-type="tree" data-path="${escapeHtml(node.path)}">
+            <span class="tree-icon">▶</span>
+            <span class="tree-name">${escapeHtml(node.name)}</span>
+          </div>
+          <ul class="tree-children" hidden>${renderTreeLevel(children)}</ul>
+        </li>`;
+      }
+      return `<li>
+        <div class="tree-item" data-type="blob" data-path="${escapeHtml(node.path)}">
+          <span class="tree-icon">·</span>
+          <span class="tree-name">${escapeHtml(node.name)}</span>
+        </div>
+      </li>`;
+    })
+    .join("");
+}
+
+function renderSearchResults(query: string) {
+  if (!currentTree) return;
+  const results = fuzzyFilterEntries(query, currentTree.entries);
+
+  if (results.length === 0) {
+    treeContent.innerHTML = `<p class="tree-empty">No files matching "${escapeHtml(query)}"</p>`;
+    return;
+  }
+
+  treeContent.innerHTML = `<ul class="tree-search-results">${results
+    .map((entry) => {
+      const name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
+      const dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+      return `<li class="tree-search-item" data-path="${escapeHtml(entry.path)}">
+        <span class="tree-search-name">${escapeHtml(name)}</span>
+        <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
+      </li>`;
+    })
+    .join("")}</ul>`;
+}
+
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   showScreen("loading");
@@ -221,7 +296,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
     .join("");
 
   const overviewActions = $("overview-actions")!;
-  overviewActions.innerHTML = `<button id="open-history" type="button">Open history</button>`;
+  overviewActions.innerHTML = `<button id="open-tree" type="button">Browse files</button> <button id="open-history" type="button">Open history</button>`;
 
   const suggestionsEl = $("overview-suggestions")!;
   const emptyEl = $("overview-empty")!;
@@ -311,6 +386,10 @@ document.addEventListener("click", (e) => {
   if (historyButton && currentContext) {
     navigate(currentContext, { view: "history" });
   }
+  const treeButton = (e.target as HTMLElement).closest("#open-tree");
+  if (treeButton && currentContext) {
+    navigate(currentContext, { view: "tree" });
+  }
 });
 
 waiContent.addEventListener("click", (e) => {
@@ -378,8 +457,46 @@ beadsContent.addEventListener("click", (e) => {
   }
 });
 
+// Tree: search input → filter or show tree
+treeSearch.addEventListener("input", () => {
+  const query = treeSearch.value.trim();
+  if (query) {
+    renderSearchResults(query);
+  } else {
+    renderTreeNodes();
+  }
+});
+
+// Tree: click on directory → toggle, click on file → navigate
+treeContent.addEventListener("click", (e) => {
+  const dirItem = (e.target as HTMLElement).closest('.tree-item[data-type="tree"]') as HTMLElement | null;
+  if (dirItem) {
+    const children = dirItem.nextElementSibling as HTMLElement | null;
+    if (children) {
+      const wasHidden = children.hidden;
+      children.hidden = !wasHidden;
+      const icon = dirItem.querySelector(".tree-icon");
+      if (icon) icon.textContent = wasHidden ? "▼" : "▶";
+    }
+    return;
+  }
+
+  const fileItem = (e.target as HTMLElement).closest('.tree-item[data-type="blob"]') as HTMLElement | null;
+  if (fileItem && currentContext) {
+    const path = fileItem.dataset.path;
+    if (path) navigate(currentContext, { view: "file", path });
+    return;
+  }
+
+  const searchItem = (e.target as HTMLElement).closest(".tree-search-item") as HTMLElement | null;
+  if (searchItem && currentContext) {
+    const path = searchItem.dataset.path;
+    if (path) navigate(currentContext, { view: "file", path });
+  }
+});
+
 // Back buttons → overview
-for (const btn of [fileBack, beadsBack, historyBack, waiBack]) {
+for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack]) {
   btn.addEventListener("click", () => {
     if (currentContext) {
       navigate(currentContext, { view: "overview" });

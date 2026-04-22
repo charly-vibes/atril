@@ -540,6 +540,148 @@ button:hover {
   font-size: 0.8rem;
 }
 
+/* ─── Tree / file browser screen ─── */
+#tree-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.75rem;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+#tree-breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tree-nav button {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+}
+
+#tree-search-container {
+  margin-bottom: 0.75rem;
+}
+
+#tree-search {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+}
+
+#tree-search:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+#tree-content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+}
+
+.tree-list {
+  list-style: none;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  transition: background 0.1s;
+}
+
+.tree-item:hover {
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+}
+
+.tree-item[data-type="tree"] {
+  font-family: var(--font-ui);
+  font-weight: 500;
+}
+
+.tree-icon {
+  flex-shrink: 0;
+  width: 1em;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.tree-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-children {
+  list-style: none;
+  padding-left: 1.25rem;
+}
+
+.tree-children[hidden] {
+  display: none;
+}
+
+.tree-search-results {
+  list-style: none;
+}
+
+.tree-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.tree-search-item:hover {
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+}
+
+.tree-search-item .tree-search-name {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.tree-search-item .tree-search-path {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.tree-empty {
+  padding: 1rem 0.75rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 /* ─── Error screen ─── */
 #error-screen {
   display: flex;

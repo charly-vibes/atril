@@ -5,7 +5,7 @@ export interface RepoContext {
   branch: string;
 }
 
-export type ViewType = "overview" | "file" | "beads" | "history" | "wai";
+export type ViewType = "overview" | "file" | "beads" | "history" | "wai" | "tree";
 export type BeadsMode = "graph" | "focus";
 
 export type RouteTarget =
@@ -18,7 +18,8 @@ export type RouteTarget =
       missingDependencyId?: string;
     }
   | { view: "history"; path?: string }
-  | { view: "wai" };
+  | { view: "wai" }
+  | { view: "tree"; search?: string };
 
 /** A fully resolved route: context + target. */
 export interface Route {
@@ -30,7 +31,7 @@ interface BuildOptions {
   omitDefaultBranch?: string;
 }
 
-const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history", "wai"]);
+const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history", "wai", "tree"]);
 const VALID_BEADS_MODES = new Set<BeadsMode>(["graph", "focus"]);
 
 /**
@@ -63,6 +64,9 @@ export function buildRoute(
     if (target.missingDependencyId) {
       params.set("missingDependency", target.missingDependencyId);
     }
+  }
+  if (target.view === "tree") {
+    if (target.search) params.set("search", target.search);
   }
   return "?" + params.toString();
 }
@@ -122,6 +126,11 @@ export function parseRoute(params: URLSearchParams): Route | null {
 
   if (view === "wai") {
     return { context, target: { view } };
+  }
+
+  if (view === "tree") {
+    const search = params.get("search") ?? undefined;
+    return { context, target: search ? { view, search } : { view } };
   }
 
   return { context, target: { view: "overview" } };
