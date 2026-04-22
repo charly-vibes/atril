@@ -22,22 +22,32 @@ export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: stri
 
   const items = commits
     .map((commit) => {
+      const lines = commit.message.split("\n");
+      const title = lines[0] ?? "";
+      const body = lines.slice(1).join("\n").trim();
+
       const changedPaths = commit.changedPaths?.length
         ? `<ul class="changed-paths">${commit.changedPaths
             .slice(0, 5)
             .map((changedPath) => `<li><button type="button" class="changed-path-link" data-path="${escapeHtml(changedPath)}">${escapeHtml(changedPath)}</button></li>`)
             .join("")}</ul>`
-        : `<p class="changed-paths-empty">Changed paths unavailable for this commit.</p>`;
+        : "";
+
+      const hasDetails = body || changedPaths;
+      const detailsContent = `${body ? `<pre class="history-body">${escapeHtml(body)}</pre>` : ""}${changedPaths}`;
 
       return `
         <li class="history-item">
-          <h4>${escapeHtml(commit.message)}</h4>
-          <p class="history-meta">
-            <span class="author">${escapeHtml(commit.authorName)}</span>
-            <span class="timestamp">${escapeHtml(formatTimestamp(commit.authoredAt))}</span>
-            <span class="sha">${escapeHtml(commit.sha.slice(0, 7))}</span>
-          </p>
-          ${changedPaths}
+          ${hasDetails ? `<details>
+            <summary class="history-summary">
+              <span class="history-sha">${escapeHtml(commit.sha.slice(0, 7))}</span>
+              <span class="history-title">${escapeHtml(title)}</span>
+            </summary>
+            ${detailsContent}
+          </details>` : `<div class="history-summary">
+            <span class="history-sha">${escapeHtml(commit.sha.slice(0, 7))}</span>
+            <span class="history-title">${escapeHtml(title)}</span>
+          </div>`}
         </li>`;
     })
     .join("");
