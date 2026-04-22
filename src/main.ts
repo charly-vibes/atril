@@ -165,7 +165,8 @@ async function showHistoryView(path?: string) {
       currentContext.branch,
       path,
     );
-    historyContent.innerHTML = renderHistoryOverview(commits, path);
+    const slug = `${currentContext.owner}/${currentContext.repo}`;
+    historyContent.innerHTML = renderHistoryOverview(commits, path, slug);
     showScreen("history");
   } catch (err) {
     if (err instanceof GitHubApiError) {
@@ -299,7 +300,13 @@ async function showFileView(path: string, anchor?: string) {
 
 function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources, suggestions: EntryPoint[]) {
   const header = $("overview-header")!;
-  header.innerHTML = `<h2>${escapeHtml(ref.owner)}/${escapeHtml(ref.repo)}</h2><span class="branch">${escapeHtml(branch)}</span>`;
+  header.innerHTML = `<h2>${escapeHtml(ref.owner)}/${escapeHtml(ref.repo)}</h2>
+    <button type="button" class="branch-toggle" title="Change branch">
+      <span class="branch-label">${escapeHtml(branch)}</span>
+    </button>
+    <form class="branch-form" hidden>
+      <input type="text" class="branch-input" value="${escapeHtml(branch)}" autocomplete="off" />
+    </form>`;
 
   const sourcesEl = $("overview-sources")!;
   const sourceLabels: [keyof KnowledgeSources, string][] = [
@@ -389,6 +396,57 @@ form.addEventListener("submit", (e) => {
   repoError.textContent = "";
   loadRepo(ref);
 });
+
+// Branch toggle → show input, submit → reload with new branch
+document.addEventListener("click", (e) => {
+  const toggle = (e.target as HTMLElement).closest(".branch-toggle") as HTMLElement | null;
+  if (toggle) {
+    const form = toggle.nextElementSibling as HTMLFormElement | null;
+    if (form) {
+      toggle.hidden = true;
+      form.hidden = false;
+      const input = form.querySelector(".branch-input") as HTMLInputElement;
+      input.focus();
+      input.select();
+    }
+  }
+});
+
+document.addEventListener("submit", (e) => {
+  const form = (e.target as HTMLElement).closest(".branch-form") as HTMLFormElement | null;
+  if (!form || !currentContext) return;
+  e.preventDefault();
+  const input = form.querySelector(".branch-input") as HTMLInputElement;
+  const newBranch = input.value.trim();
+  if (!newBranch || newBranch === currentContext.branch) {
+    form.hidden = true;
+    (form.previousElementSibling as HTMLElement).hidden = false;
+    return;
+  }
+  const ref = { owner: currentContext.owner, repo: currentContext.repo };
+  // Override getDefaultBranch by loading tree directly with the chosen branch
+  switchBranch(ref, newBranch);
+});
+
+async function switchBranch(ref: { owner: string; repo: string }, branch: string) {
+  showScreen("loading");
+  try {
+    const tree = await client.getTree(ref.owner, ref.repo, branch);
+    currentContext = { owner: ref.owner, repo: ref.repo, branch };
+    currentTree = tree;
+    const sources = detectKnowledgeSources(tree.entries);
+    const suggestions = suggestEntryPoints(sources, tree.entries);
+    renderOverview(ref, branch, sources, suggestions);
+    navigate(currentContext, { view: "overview" });
+  } catch (err) {
+    if (err instanceof GitHubApiError) {
+      errorMessage.textContent = `Branch "${branch}" not found or API error.`;
+    } else {
+      errorMessage.textContent = "Failed to switch branch.";
+    }
+    showScreen("error");
+  }
+}
 
 // Suggestion clicks → navigate to file
 document.addEventListener("click", (e) => {

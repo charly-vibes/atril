@@ -1,13 +1,13 @@
 import type { CommitHistoryEntry } from "./github-api";
 import { escapeHtml } from "./html-utils";
 
-function formatTimestamp(iso: string): string {
+function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toISOString().replace(".000Z", "Z");
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: string): string {
+export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: string, repoSlug?: string): string {
   if (commits.length === 0) {
     return `
       <section class="history-panel empty">
@@ -34,19 +34,25 @@ export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: stri
         : "";
 
       const hasDetails = body || changedPaths;
-      const detailsContent = `${body ? `<pre class="history-body">${escapeHtml(body)}</pre>` : ""}${changedPaths}`;
+      const metaHtml = `<p class="history-meta"><span>${escapeHtml(commit.authorName)}</span> <span>${escapeHtml(formatDate(commit.authoredAt))}</span></p>`;
+      const detailsContent = `${metaHtml}${body ? `<pre class="history-body">${escapeHtml(body)}</pre>` : ""}${changedPaths}`;
+      const shortSha = escapeHtml(commit.sha.slice(0, 7));
+      const shaHtml = repoSlug
+        ? `<a class="history-sha" href="https://github.com/${escapeHtml(repoSlug)}/commit/${escapeHtml(commit.sha)}" target="_blank" rel="noopener">${shortSha}</a>`
+        : `<span class="history-sha">${shortSha}</span>`;
 
       return `
         <li class="history-item">
           ${hasDetails ? `<details>
             <summary class="history-summary">
-              <span class="history-sha">${escapeHtml(commit.sha.slice(0, 7))}</span>
+              ${shaHtml}
               <span class="history-title">${escapeHtml(title)}</span>
             </summary>
             ${detailsContent}
           </details>` : `<div class="history-summary">
-            <span class="history-sha">${escapeHtml(commit.sha.slice(0, 7))}</span>
+            ${shaHtml}
             <span class="history-title">${escapeHtml(title)}</span>
+            ${metaHtml}
           </div>`}
         </li>`;
     })

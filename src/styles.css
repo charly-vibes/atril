@@ -154,12 +154,43 @@ button:hover {
   font-weight: 600;
 }
 
-#overview-header .branch {
+.branch-toggle {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--color-muted);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   margin-top: 0.15rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+
+.branch-toggle:hover {
+  border-color: var(--color-border);
+  color: var(--color-accent);
+}
+
+.branch-form {
+  margin-top: 0.15rem;
+}
+
+.branch-input {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  outline: none;
+}
+
+.branch-form[hidden] {
+  display: none;
 }
 
 #overview-sources {
@@ -528,11 +559,18 @@ details > .history-summary:hover .history-title {
   color: var(--color-accent);
 }
 
-.history-sha {
+a.history-sha,
+span.history-sha {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-muted);
   flex-shrink: 0;
+  text-decoration: none;
+}
+
+a.history-sha:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
 .history-title {
@@ -554,6 +592,15 @@ details > .history-summary:hover .history-title {
   background: none;
   border: none;
   line-height: 1.5;
+}
+
+.history-meta {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-family: var(--font-ui);
+  margin: 0.15rem 0 0.25rem 2.75rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .history-scope {
