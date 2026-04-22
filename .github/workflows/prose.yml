@@ -13,4 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: errata-ai/vale-action@v2
         with:
-          files: README.md,docs,openspec
+          files: docs
+      - uses: errata-ai/vale-action@v2
+        with:
+          files: openspec
