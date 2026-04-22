@@ -405,7 +405,7 @@ document.addEventListener("click", (e) => {
       return;
     }
     if (kind === "docs") {
-      navigate(currentContext, { view: "tree", search: "docs" });
+      navigate(currentContext, { view: "tree", search: "docs/" });
       return;
     }
     if (kind === "tree") {

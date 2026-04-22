@@ -6,71 +6,85 @@ function entry(path: string, type: "blob" | "tree" = "blob"): GitHubTreeEntry {
   return { path, type, sha: "abc" };
 }
 
-describe("buildWaiArtifactGroups (OpenSpec add-unified-repo-reader:4.1)", () => {
-  test("groups project artifacts together and keeps shared artifacts browsable by location", () => {
+describe("buildWaiArtifactGroups", () => {
+  test("creates PARA structure with Projects containing sub-categories", () => {
     const groups = buildWaiArtifactGroups([
-      entry(".wai", "tree"),
-      entry(".wai/config.toml"),
       entry(".wai/projects/atril/research/2026-04-20-findings.md"),
-      entry(".wai/projects/atril/plan/2026-04-20-next-steps.md"),
-      entry(".wai/projects/ops/design/2026-04-18-indexing.md"),
+      entry(".wai/projects/atril/plans/2026-04-20-next-steps.md"),
+      entry(".wai/projects/atril/handoffs/2026-04-20-session-end.md"),
       entry(".wai/resources/reflections/testing.md"),
-      entry(".wai/inbox.org"),
     ]);
 
-    expect(groups).toEqual([
-      {
-        id: "project:atril",
-        label: "Project: atril",
-        mode: "project",
-        paths: [
-          ".wai/projects/atril/plan/2026-04-20-next-steps.md",
-          ".wai/projects/atril/research/2026-04-20-findings.md",
-        ],
-      },
-      {
-        id: "project:ops",
-        label: "Project: ops",
-        mode: "project",
-        paths: [".wai/projects/ops/design/2026-04-18-indexing.md"],
-      },
-      {
-        id: "location:resources",
-        label: "Shared resources",
-        mode: "location",
-        paths: [".wai/resources/reflections/testing.md"],
-      },
-      {
-        id: "location:root",
-        label: "Workspace root",
-        mode: "location",
-        paths: [".wai/inbox.org"],
-      },
-    ]);
+    expect(groups).toHaveLength(2); // Projects + Resources
+    expect(groups[0].label).toBe("Projects");
+    expect(groups[0].children).toHaveLength(1); // one project: atril
+    expect(groups[0].children![0].label).toBe("atril");
+    expect(groups[0].children![0].children).toHaveLength(3); // handoffs, research, plans
+
+    const categories = groups[0].children![0].children!.map((c) => c.label);
+    expect(categories).toEqual(["Handoffs", "Research", "Plans"]);
+
+    expect(groups[1].label).toBe("Resources");
+    expect(groups[1].paths).toHaveLength(1);
   });
 
-  test("returns no browse groups when .wai is missing", () => {
+  test("filters out internal files", () => {
+    const groups = buildWaiArtifactGroups([
+      entry(".wai/.gitignore"),
+      entry(".wai/.pipeline-run"),
+      entry(".wai/projects/atril/.state"),
+      entry(".wai/pipeline-runs/ticket-cycle.yml"),
+      entry(".wai/resources/agent-config/skills/commit/SKILL.md"),
+      entry(".wai/resources/pipelines/ticket-cycle.toml"),
+      entry(".wai/projects/atril/research/2026-04-20-findings.md"),
+    ]);
+
+    expect(groups).toHaveLength(1); // only Projects
+    const allPaths = groups[0].children![0].children![0].paths;
+    expect(allPaths).toHaveLength(1);
+    expect(allPaths[0]).toBe(".wai/projects/atril/research/2026-04-20-findings.md");
+  });
+
+  test("returns empty for no wai artifacts", () => {
     expect(buildWaiArtifactGroups([entry("README.md")])).toEqual([]);
   });
 
-  test("returns no browse groups when .wai has only structural files", () => {
-    expect(buildWaiArtifactGroups([entry(".wai", "tree"), entry(".wai/config.toml")])).toEqual([]);
+  test("includes areas and archive sections when present", () => {
+    const groups = buildWaiArtifactGroups([
+      entry(".wai/areas/ops/runbook.md"),
+      entry(".wai/archive/old-project/notes.md"),
+      entry(".wai/resources/reflections/testing.md"),
+    ]);
+
+    expect(groups.map((g) => g.label)).toEqual(["Areas", "Resources", "Archive"]);
   });
 });
 
-describe("WAI artifact history navigation (OpenSpec add-unified-repo-reader:5.3)", () => {
-  test("renders a history action for each artifact alongside the existing file link", () => {
+describe("renderWaiOverview", () => {
+  test("renders readable titles from filenames", () => {
+    const groups = buildWaiArtifactGroups([
+      entry(".wai/projects/atril/research/2026-04-20-implemented-link-resolver.md"),
+    ]);
+    const html = renderWaiOverview(groups);
+
+    expect(html).toContain("Implemented link resolver");
+    expect(html).toContain('class="wai-artifact-name">Implemented link resolver</span>');
+    expect(html).not.toContain('class="wai-artifact-name">2026');
+  });
+
+  test("renders nested PARA headings", () => {
     const groups = buildWaiArtifactGroups([
       entry(".wai/projects/atril/research/2026-04-20-findings.md"),
     ]);
     const html = renderWaiOverview(groups);
 
-    expect(html).toContain('class="wai-artifact-history"');
-    expect(html).toContain('data-path=".wai/projects/atril/research/2026-04-20-findings.md"');
+    expect(html).toContain("<h3>Projects</h3>");
+    expect(html).toContain("<h4>atril</h4>");
+    expect(html).toContain("<h5>Research</h5>");
   });
 
-  test("does not render history actions when no artifacts exist", () => {
+  test("renders empty state when no artifacts", () => {
     const html = renderWaiOverview([]);
-    expect(html).not.toContain('class="wai-artifact-history"');
+    expect(html).toContain("No WAI artifacts available");
   });
 });

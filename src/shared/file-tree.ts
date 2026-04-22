@@ -78,8 +78,8 @@ export function buildFileTree(entries: GitHubTreeEntry[]): TreeNode[] {
 }
 
 /**
- * Fuzzy-filter tree entries by query. Only returns blobs.
- * Characters in query must appear in order in the entry path.
+ * Filter tree entries by query. Only returns blobs.
+ * If query contains "/" uses prefix matching; otherwise fuzzy matching.
  */
 export function fuzzyFilterEntries(
   query: string,
@@ -89,15 +89,23 @@ export function fuzzyFilterEntries(
   if (!query) return [];
 
   const lowerQuery = query.toLowerCase();
+  const usePrefix = lowerQuery.includes("/");
   const scored: Array<{ entry: GitHubTreeEntry; score: number }> = [];
 
   for (const entry of entries) {
     if (entry.type !== "blob") continue;
 
     const lowerPath = entry.path.toLowerCase();
-    const score = fuzzyScore(lowerQuery, lowerPath);
-    if (score > 0) {
-      scored.push({ entry, score });
+
+    if (usePrefix) {
+      if (lowerPath.startsWith(lowerQuery) || lowerPath.includes("/" + lowerQuery)) {
+        scored.push({ entry, score: lowerPath.startsWith(lowerQuery) ? 100 : 50 });
+      }
+    } else {
+      const score = fuzzyScore(lowerQuery, lowerPath);
+      if (score > 0) {
+        scored.push({ entry, score });
+      }
     }
   }
 

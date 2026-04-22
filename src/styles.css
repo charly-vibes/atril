@@ -530,9 +530,33 @@ button:hover {
   font-size: 0.9rem;
 }
 
+.wai-group h3 {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
 .wai-group h4 {
   font-family: var(--font-ui);
-  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.35rem;
+  color: var(--color-fg);
+}
+
+.wai-group h5 {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wai-group .wai-group {
+  padding-left: 0.5rem;
 }
 
 .wai-artifact-list {
