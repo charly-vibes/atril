@@ -66,7 +66,7 @@ export class GitHubClient {
     if (this.cache.has(key)) return this.cache.get(key) as string;
 
     const url = `${RAW_BASE}/${owner}/${repo}/${ref}/${path}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-cache" });
     if (!res.ok) {
       this.throwForStatus(res.status);
     }
