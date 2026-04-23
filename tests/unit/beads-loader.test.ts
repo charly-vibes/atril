@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeEach, mock } from "bun:test";
 import { parseIssuesJsonl, loadBeadsIssues } from "../../src/shared/beads-loader";
-import { GitHubClient } from "../../src/shared/github-api";
+import { GitHubClient, GitHubApiError } from "../../src/shared/github-api";
 
 // --- parseIssuesJsonl (pure function) ---
 
@@ -140,6 +140,20 @@ describe("loadBeadsIssues", () => {
 
     const result = await loadBeadsIssues(client, "owner", "repo", "main");
     expect(result.issues).toHaveLength(0);
+  });
+
+  test("propagates non-404 errors without falling through to beads-sync", async () => {
+    const fetchMock = mock(() =>
+      Promise.resolve(new Response("", { status: 403 }))
+    );
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(
+      loadBeadsIssues(client, "owner", "repo", "main"),
+    ).rejects.toThrow(GitHubApiError);
+
+    // Should NOT have tried beads-sync — only one fetch for the default branch
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test("includes ISO timestamp in fetchedAt", async () => {

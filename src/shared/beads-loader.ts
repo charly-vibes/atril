@@ -1,4 +1,4 @@
-import type { GitHubClient } from "./github-api";
+import { GitHubApiError, type GitHubClient } from "./github-api";
 
 export interface BeadsIssue {
   id: string;
@@ -70,8 +70,9 @@ export async function loadBeadsIssues(
       fetchedAt: new Date().toISOString(),
       branch: defaultBranch,
     };
-  } catch {
-    // Fall through to beads-sync
+  } catch (err) {
+    if (!(err instanceof GitHubApiError && err.status === 404)) throw err;
+    // 404 → fall through to beads-sync
   }
 
   // Fallback to beads-sync branch

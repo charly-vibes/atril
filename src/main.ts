@@ -179,7 +179,19 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
 
 function rerenderBeadsList() {
   if (!currentBeads) return;
+  const activeEl = document.activeElement as HTMLElement | null;
+  const wasSearch = activeEl?.classList.contains("beads-search");
+  const cursorPos = wasSearch ? (activeEl as HTMLInputElement).selectionStart : null;
+
   beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
+
+  if (wasSearch) {
+    const searchEl = beadsContent.querySelector(".beads-search") as HTMLInputElement | null;
+    if (searchEl) {
+      searchEl.focus();
+      if (cursorPos !== null) searchEl.selectionStart = searchEl.selectionEnd = cursorPos;
+    }
+  }
 }
 
 async function showHistoryView(path?: string) {
@@ -401,6 +413,8 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
     currentContext = { owner: ref.owner, repo: ref.repo, branch };
     currentTree = tree;
     currentBeads = null;
+    currentBeadsFilters = {};
+    currentBeadsSelectedId = undefined;
 
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
@@ -479,6 +493,8 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
     currentContext = { owner: ref.owner, repo: ref.repo, branch };
     currentTree = tree;
     currentBeads = null;
+    currentBeadsFilters = {};
+    currentBeadsSelectedId = undefined;
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
     renderOverview(ref, branch, sources, suggestions);
