@@ -14,6 +14,8 @@ import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries, type TreeNode } from "./shared/file-tree";
+import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
+import { renderBeadsListView, type BeadsFilters } from "./shared/beads-renderer";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -57,6 +59,9 @@ const client = new GitHubClient();
 /** Current repo context, set after initial load. */
 let currentContext: RepoContext | null = null;
 let currentTree: TreeResult | null = null;
+let currentBeads: BeadsLoadResult | null = null;
+let currentBeadsFilters: BeadsFilters = {};
+let currentBeadsSelectedId: string | undefined;
 let navDepth = 0;
 
 function showScreen(name: keyof typeof screens) {
@@ -73,15 +78,15 @@ function navigate(ctx: RepoContext, target: RouteTarget) {
   routeTo(target);
 }
 
-function routeTo(target: RouteTarget) {
+async function routeTo(target: RouteTarget) {
   if (target.view === "overview") {
     showScreen("overview");
   } else if (target.view === "file" && target.path) {
-    showFileView(target.path, target.anchor);
+    await showFileView(target.path, target.anchor);
   } else if (target.view === "beads") {
-    showBeadsView(target);
+    await showBeadsView(target);
   } else if (target.view === "history") {
-    showHistoryView(target.path);
+    await showHistoryView(target.path);
   } else if (target.view === "wai") {
     showWaiView();
   } else if (target.view === "tree") {
@@ -109,14 +114,13 @@ function renderIssueReferences(refs: IssueReference[]): string {
     </div>`;
 }
 
-function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
-  const mode = target.mode ?? "graph";
+async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
+  if (!currentContext) return;
+  const mode = target.mode ?? "list";
 
   if (mode === "focus" && target.issueId) {
     beadsBreadcrumb.textContent = `Issues / ${target.issueId}`;
 
-    // Issue body is not available on the route target — resolve from ID/dependency
-    // strings only. Full description resolution requires API integration (future work).
     const issueText = target.issueId + (target.missingDependencyId ? ` ${target.missingDependencyId}` : "");
     const refs = currentTree
       ? resolveIssueReferences(issueText, currentTree.entries)
@@ -138,14 +142,44 @@ function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
     return;
   }
 
-  beadsBreadcrumb.textContent = "Issues / graph";
-  beadsContent.innerHTML = `
-    <section class="beads-panel">
-      <h3>Dependency graph</h3>
-      <p>Graph mode remains available as the broader dependency exploration view.</p>
-      <p>Use a focused dependency route to inspect one issue together with its direct blockers and dependents.</p>
-    </section>`;
-  showScreen("beads");
+  if (mode === "graph") {
+    beadsBreadcrumb.textContent = "Issues / graph";
+    beadsContent.innerHTML = `
+      <section class="beads-panel">
+        <h3>Dependency graph</h3>
+        <p>Graph mode remains available as the broader dependency exploration view.</p>
+        <p>Use a focused dependency route to inspect one issue together with its direct blockers and dependents.</p>
+      </section>`;
+    showScreen("beads");
+    return;
+  }
+
+  // List mode — load issues and render list/detail view
+  currentBeadsSelectedId = target.issueId;
+  beadsBreadcrumb.textContent = target.issueId ? `Issues / ${target.issueId}` : "Issues";
+  showScreen("loading");
+
+  try {
+    if (!currentBeads) {
+      currentBeads = await loadBeadsIssues(
+        client,
+        currentContext.owner,
+        currentContext.repo,
+        currentContext.branch,
+      );
+    }
+    beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
+    showScreen("beads");
+  } catch (err) {
+    errorMessage.textContent =
+      err instanceof Error ? err.message : "Failed to load issues.";
+    showScreen("error");
+  }
+}
+
+function rerenderBeadsList() {
+  if (!currentBeads) return;
+  beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
 }
 
 async function showHistoryView(path?: string) {
@@ -366,6 +400,7 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
 
     currentContext = { owner: ref.owner, repo: ref.repo, branch };
     currentTree = tree;
+    currentBeads = null;
 
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
@@ -443,6 +478,7 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
     const tree = await client.getTree(ref.owner, ref.repo, branch);
     currentContext = { owner: ref.owner, repo: ref.repo, branch };
     currentTree = tree;
+    currentBeads = null;
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
     renderOverview(ref, branch, sources, suggestions);
@@ -464,7 +500,7 @@ document.addEventListener("click", (e) => {
     const path = item.dataset.path;
     const kind = item.dataset.kind;
     if (kind === "beads") {
-      navigate(currentContext, { view: "beads", mode: "graph" });
+      navigate(currentContext, { view: "beads", mode: "list" });
       return;
     }
     if (kind === "wai") {
@@ -557,11 +593,53 @@ historyContent.addEventListener("click", (e) => {
   }
 });
 
-// Issue reference links in beads view → navigate to file
+// Beads filter/search handlers
+beadsContent.addEventListener("change", (e) => {
+  const select = e.target as HTMLSelectElement;
+  if (!select.classList.contains("beads-filter")) return;
+  const key = select.dataset.filter;
+  const val = select.value;
+  if (key === "status") currentBeadsFilters.status = val || undefined;
+  else if (key === "type") currentBeadsFilters.type = val || undefined;
+  else if (key === "priority") currentBeadsFilters.priority = val ? Number(val) : undefined;
+  rerenderBeadsList();
+});
+
+beadsContent.addEventListener("input", (e) => {
+  const input = e.target as HTMLInputElement;
+  if (!input.classList.contains("beads-search")) return;
+  currentBeadsFilters.search = input.value.trim() || undefined;
+  rerenderBeadsList();
+});
+
+// Beads view click delegation
 beadsContent.addEventListener("click", (e) => {
-  const link = (e.target as HTMLElement).closest(".issue-ref-link") as HTMLElement | null;
-  const path = link?.dataset.path;
-  if (path && currentContext) {
+  if (!currentContext) return;
+
+  // Issue list item → select issue in list mode
+  const listItem = (e.target as HTMLElement).closest(".beads-list-item") as HTMLElement | null;
+  if (listItem) {
+    const issueId = listItem.dataset.issueId;
+    if (issueId) {
+      navigate(currentContext, { view: "beads", mode: "list", issueId });
+    }
+    return;
+  }
+
+  // Dependency link → select that issue
+  const depLink = (e.target as HTMLElement).closest(".beads-dep-link") as HTMLElement | null;
+  if (depLink) {
+    const issueId = depLink.dataset.issueId;
+    if (issueId) {
+      navigate(currentContext, { view: "beads", mode: "list", issueId });
+    }
+    return;
+  }
+
+  // Issue reference links → navigate to file
+  const refLink = (e.target as HTMLElement).closest(".issue-ref-link") as HTMLElement | null;
+  const path = refLink?.dataset.path;
+  if (path) {
     navigate(currentContext, { view: "file", path });
   }
 });

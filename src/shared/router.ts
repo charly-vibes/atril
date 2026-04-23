@@ -6,7 +6,7 @@ export interface RepoContext {
 }
 
 export type ViewType = "overview" | "file" | "beads" | "history" | "wai" | "tree";
-export type BeadsMode = "graph" | "focus";
+export type BeadsMode = "list" | "graph" | "focus";
 
 export type RouteTarget =
   | { view: "overview" }
@@ -32,7 +32,7 @@ interface BuildOptions {
 }
 
 const VALID_VIEWS = new Set<ViewType>(["overview", "file", "beads", "history", "wai", "tree"]);
-const VALID_BEADS_MODES = new Set<BeadsMode>(["graph", "focus"]);
+const VALID_BEADS_MODES = new Set<BeadsMode>(["list", "graph", "focus"]);
 
 /**
  * Build a URL query string from a repo context and route target.
@@ -58,7 +58,7 @@ export function buildRoute(
     if (target.path) params.set("path", target.path);
   }
   if (target.view === "beads") {
-    const mode = target.mode ?? "graph";
+    const mode = target.mode ?? "list";
     params.set("mode", mode);
     if (target.issueId) params.set("issue", target.issueId);
     if (target.missingDependencyId) {
@@ -99,8 +99,8 @@ export function parseRoute(params: URLSearchParams): Route | null {
   }
 
   if (view === "beads") {
-    const requestedMode = (params.get("mode") ?? "graph") as BeadsMode;
-    const mode = VALID_BEADS_MODES.has(requestedMode) ? requestedMode : "graph";
+    const requestedMode = (params.get("mode") ?? "list") as BeadsMode;
+    const mode = VALID_BEADS_MODES.has(requestedMode) ? requestedMode : "list";
     const issueId = params.get("issue") ?? undefined;
     const missingDependencyId = params.get("missingDependency") ?? undefined;
 
@@ -113,6 +113,13 @@ export function parseRoute(params: URLSearchParams): Route | null {
           issueId,
           ...(missingDependencyId ? { missingDependencyId } : {}),
         },
+      };
+    }
+
+    if (mode === "list") {
+      return {
+        context,
+        target: { view, mode, ...(issueId ? { issueId } : {}) },
       };
     }
 

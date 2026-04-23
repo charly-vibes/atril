@@ -130,15 +130,50 @@ describe("wai routes (OpenSpec add-unified-repo-reader:4.2)", () => {
   });
 });
 
-describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () => {
+describe("beads routes", () => {
   const ctx: RepoContext = { owner: "acme", repo: "widgets", branch: "main" };
 
-  test("builds a focused dependency route that preserves repository context beyond graph mode", () => {
-    const params = buildRoute(
-      ctx,
-      { view: "beads", mode: "focus", issueId: "atril-3x9" } as any,
-    );
+  test("defaults to list mode when no mode specified", () => {
+    const params = buildRoute(ctx, { view: "beads" });
+    expect(params).toContain("mode=list");
+  });
 
+  test("parses beads route without mode as list", () => {
+    const route = parseRoute(
+      new URLSearchParams("owner=acme&repo=widgets&branch=main&view=beads"),
+    );
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "beads", mode: "list" },
+    });
+  });
+
+  test("builds list mode with selected issue", () => {
+    const params = buildRoute(ctx, {
+      view: "beads",
+      mode: "list",
+      issueId: "atril-abc",
+    });
+    expect(params).toContain("mode=list");
+    expect(params).toContain("issue=atril-abc");
+  });
+
+  test("parses list mode with selected issue", () => {
+    const route = parseRoute(
+      new URLSearchParams("owner=acme&repo=widgets&branch=main&view=beads&mode=list&issue=atril-abc"),
+    );
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "beads", mode: "list", issueId: "atril-abc" },
+    });
+  });
+
+  test("builds a focused dependency route that preserves repository context beyond graph mode", () => {
+    const params = buildRoute(ctx, {
+      view: "beads",
+      mode: "focus",
+      issueId: "atril-3x9",
+    });
     expect(params).toBe(
       "?owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9",
     );
@@ -148,20 +183,18 @@ describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () =>
     const params = new URLSearchParams(
       "owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9",
     );
-    const route = parseRoute(params) as any;
-
+    const route = parseRoute(params);
     expect(route).toEqual({
       context: ctx,
       target: { view: "beads", mode: "focus", issueId: "atril-3x9" },
     });
   });
 
-  test("preserves selected issue context when a dependency reference is missing so the UI can show a fallback message", () => {
+  test("preserves selected issue context when a dependency reference is missing", () => {
     const params = new URLSearchParams(
       "owner=acme&repo=widgets&branch=main&view=beads&mode=focus&issue=atril-3x9&missingDependency=atril-404",
     );
-    const route = parseRoute(params) as any;
-
+    const route = parseRoute(params);
     expect(route).toEqual({
       context: ctx,
       target: {
@@ -177,8 +210,22 @@ describe("beads dependency routes (OpenSpec add-unified-repo-reader:3.1)", () =>
     const params = new URLSearchParams(
       "owner=acme&repo=widgets&branch=main&view=beads&mode=focus",
     );
-    const route = parseRoute(params) as any;
+    const route = parseRoute(params);
+    expect(route).toEqual({
+      context: ctx,
+      target: { view: "beads", mode: "graph" },
+    });
+  });
 
+  test("builds explicit graph mode route", () => {
+    const params = buildRoute(ctx, { view: "beads", mode: "graph" });
+    expect(params).toContain("mode=graph");
+  });
+
+  test("parses explicit graph mode route", () => {
+    const route = parseRoute(
+      new URLSearchParams("owner=acme&repo=widgets&branch=main&view=beads&mode=graph"),
+    );
     expect(route).toEqual({
       context: ctx,
       target: { view: "beads", mode: "graph" },
