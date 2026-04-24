@@ -1,4 +1,4 @@
-import { marked, Renderer } from "marked";
+import { marked, Renderer, type Token, type Tokens } from "marked";
 import { escapeHtml } from "./html-utils";
 
 const renderer = new Renderer();
@@ -23,6 +23,44 @@ function slugifyHeading(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function processOpenSpecTokens(tokens: Token[]): Token[] {
+  const result: Token[] = [];
+  const stack: { depth: number }[] = [];
+
+  for (const token of tokens) {
+    if (token.type === "heading" && (token.text.startsWith("Requirement:") || token.text.startsWith("Scenario:"))) {
+      while (stack.length > 0 && stack[stack.length - 1].depth >= token.depth) {
+        stack.pop();
+        result.push({ type: "html", raw: "</details>\n", text: "</details>\n" } as Tokens.HTML);
+      }
+      
+      const id = slugifyHeading(token.text);
+      const headingHtml = `<h${token.depth} id="${escapeHtml(id)}" style="display:inline; margin: 0;">${token.text}</h${token.depth}>`;
+      const htmlStart = `<details class="openspec-details"><summary style="cursor: pointer; font-weight: bold; margin-bottom: 0.5rem;">${headingHtml}</summary>\n`;
+      result.push({ type: "html", raw: htmlStart, text: htmlStart } as Tokens.HTML);
+      
+      stack.push({ depth: token.depth });
+      continue;
+    }
+    
+    if (token.type === "heading") {
+      while (stack.length > 0 && stack[stack.length - 1].depth >= token.depth) {
+        stack.pop();
+        result.push({ type: "html", raw: "</details>\n", text: "</details>\n" } as Tokens.HTML);
+      }
+    }
+    
+    result.push(token);
+  }
+
+  while (stack.length > 0) {
+    stack.pop();
+    result.push({ type: "html", raw: "</details>\n", text: "</details>\n" } as Tokens.HTML);
+  }
+
+  return result;
+}
+
 function renderOrg(content: string): string {
   const lines = content.trim().split(/\n+/);
   return lines
@@ -38,6 +76,13 @@ function renderOrg(content: string): string {
 
 export function renderReadableDocument(path: string, content: string): string {
   if (path.endsWith(".md")) {
+    if (path.includes("openspec/")) {
+      const tokens = marked.lexer(content);
+      const modifiedTokens = processOpenSpecTokens(tokens);
+      // @ts-ignore - marked expects links object on tokens array
+      modifiedTokens.links = tokens.links;
+      return marked.parser(modifiedTokens as any) as string;
+    }
     return marked.parse(content) as string;
   }
 
