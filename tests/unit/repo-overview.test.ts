@@ -83,10 +83,12 @@ describe("suggestEntryPoints", () => {
       readme: true,
     };
     const suggestions = suggestEntryPoints(sources, entries);
-    expect(suggestions.some((s) => s.path === "README.md")).toBe(true);
+    expect(suggestions).toEqual([
+      { label: "README", path: "README.md", kind: "readme" },
+    ]);
   });
 
-  test("suggests openspec project.md when openspec present", () => {
+  test("suggests specs tree when openspec present", () => {
     const entries = tree("openspec/project.md", "openspec/specs/platform/spec.md");
     const sources: KnowledgeSources = {
       openspec: true,
@@ -96,7 +98,9 @@ describe("suggestEntryPoints", () => {
       readme: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
-    expect(suggestions.some((s) => s.path === "openspec/project.md")).toBe(true);
+    expect(suggestions).toEqual([
+      { label: "Specs", path: "openspec/specs/", kind: "tree" },
+    ]);
   });
 
   test("suggests beads issues when beads present", () => {
@@ -109,7 +113,9 @@ describe("suggestEntryPoints", () => {
       readme: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
-    expect(suggestions.some((s) => s.label.toLowerCase().includes("issue"))).toBe(true);
+    expect(suggestions).toEqual([
+      { label: "Issues", path: ".beads/issues.jsonl", kind: "beads" },
+    ]);
   });
 
   test("returns empty for repos with no knowledge sources", () => {

@@ -47,4 +47,16 @@ describe("renderReadableDocument (OpenSpec add-unified-repo-reader:4.3)", () => 
     expect(html).toContain("<pre");
     expect(html).toContain("&lt;unsafe&gt;");
   });
+
+  test("renders OpenSpec requirements and scenarios with collapsible classes", () => {
+    const html = renderReadableDocument(
+      "openspec/specs/spec-viewer/spec.md",
+      "### Requirement: Rendering\n\nText.\n\n#### Scenario: Basic view\n\nMore.",
+    );
+
+    expect(html).toContain('class="openspec-details openspec-details-requirement"');
+    expect(html).toContain('class="openspec-heading openspec-heading-requirement"');
+    expect(html).toContain('class="openspec-details openspec-details-scenario"');
+    expect(html).toContain('class="openspec-heading openspec-heading-scenario"');
+  });
 });

@@ -11,7 +11,7 @@ export interface KnowledgeSources {
 export interface EntryPoint {
   label: string;
   path: string;
-  kind: "openspec" | "beads" | "wai" | "docs" | "readme";
+  kind: "openspec" | "beads" | "wai" | "docs" | "readme" | "tree";
 }
 
 const README_PATTERN = /^readme(\.\w+)?$/i;
@@ -40,22 +40,12 @@ export function suggestEntryPoints(
 ): EntryPoint[] {
   const suggestions: EntryPoint[] = [];
 
-  if (sources.readme) {
-    const readmeEntry = entries.find((e) => README_PATTERN.test(e.path));
-    if (readmeEntry) {
-      suggestions.push({ label: "README", path: readmeEntry.path, kind: "readme" });
-    }
-  }
-
   if (sources.openspec) {
-    const hasProject = entries.some((e) => e.path === "openspec/project.md");
-    if (hasProject) {
-      suggestions.push({
-        label: "Project overview",
-        path: "openspec/project.md",
-        kind: "openspec",
-      });
-    }
+    suggestions.push({
+      label: "Specs",
+      path: "openspec/specs/",
+      kind: "tree",
+    });
   }
 
   if (sources.beads) {
@@ -80,6 +70,13 @@ export function suggestEntryPoints(
       path: "docs/",
       kind: "docs",
     });
+  }
+
+  if (sources.readme) {
+    const readmeEntry = entries.find((e) => README_PATTERN.test(e.path));
+    if (readmeEntry) {
+      suggestions.push({ label: "README", path: readmeEntry.path, kind: "readme" });
+    }
   }
 
   return suggestions;

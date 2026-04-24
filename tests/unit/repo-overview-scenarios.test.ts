@@ -27,10 +27,16 @@ describe("scenario: repository with all knowledge sources", () => {
     expect(s).toEqual({ openspec: true, beads: true, wai: true, docs: true, readme: true });
   });
 
-  test("suggests 5 entry points", () => {
+  test("suggests specs first and README last", () => {
     const s = detectKnowledgeSources(entries);
     const suggestions = suggestEntryPoints(s, entries);
-    expect(suggestions.length).toBe(5);
+    expect(suggestions.map((entry) => entry.kind)).toEqual([
+      "tree",
+      "beads",
+      "wai",
+      "docs",
+      "readme",
+    ]);
   });
 });
 
@@ -90,10 +96,10 @@ describe("scenario: repository with only README and docs", () => {
     expect(s.wai).toBe(false);
   });
 
-  test("suggests README and docs", () => {
+  test("suggests docs before README", () => {
     const s = detectKnowledgeSources(entries);
     const suggestions = suggestEntryPoints(s, entries);
     expect(suggestions.length).toBe(2);
-    expect(suggestions.map((s) => s.kind)).toEqual(["readme", "docs"]);
+    expect(suggestions.map((s) => s.kind)).toEqual(["docs", "readme"]);
   });
 });
