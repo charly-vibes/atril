@@ -29,11 +29,13 @@ function processOpenSpecTokens(tokens: Token[]): Token[] {
 
   for (const token of tokens) {
     if (token.type === "heading" && (token.text.startsWith("Requirement:") || token.text.startsWith("Scenario:"))) {
-      while (stack.length > 0 && stack[stack.length - 1].depth >= token.depth) {
+      while (true) {
+        const top = stack.at(-1);
+        if (!top || top.depth < token.depth) break;
         stack.pop();
         result.push({ type: "html", raw: "</details>\n", text: "</details>\n" } as Tokens.HTML);
       }
-      
+
       const id = slugifyHeading(token.text);
       const headingHtml = `<h${token.depth} id="${escapeHtml(id)}" style="display:inline; margin: 0;">${token.text}</h${token.depth}>`;
       const htmlStart = `<details class="openspec-details"><summary style="cursor: pointer; font-weight: bold; margin-bottom: 0.5rem;">${headingHtml}</summary>\n`;
@@ -44,7 +46,9 @@ function processOpenSpecTokens(tokens: Token[]): Token[] {
     }
     
     if (token.type === "heading") {
-      while (stack.length > 0 && stack[stack.length - 1].depth >= token.depth) {
+      while (true) {
+        const top = stack.at(-1);
+        if (!top || top.depth < token.depth) break;
         stack.pop();
         result.push({ type: "html", raw: "</details>\n", text: "</details>\n" } as Tokens.HTML);
       }
