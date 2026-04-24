@@ -49,12 +49,22 @@ export function buildFileTree(entries: GitHubTreeEntry[]): TreeNode[] {
 
   for (const entry of entries) {
     if (entry.type === "blob") {
+      let name = basename(entry.path);
+      let parentPath = dirname(entry.path);
+
+      // OpenSpec structure improvement:
+      // Hoist .../specs/<capability>/spec.md to .../specs/ with name <capability>
+      if (name === "spec.md" && parentPath.includes("/specs/") && entry.path.startsWith("openspec/")) {
+        name = basename(parentPath);
+        parentPath = dirname(parentPath);
+      }
+
       const node: TreeNode = {
-        name: basename(entry.path),
+        name,
         path: entry.path,
         type: "blob",
       };
-      const parentPath = dirname(entry.path);
+      
       if (parentPath && dirs.has(parentPath)) {
         dirs.get(parentPath)!.children!.push(node);
       } else {

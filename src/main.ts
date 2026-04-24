@@ -291,8 +291,14 @@ function renderSearchResults(query: string) {
 
   treeContent.innerHTML = `<ul class="tree-search-results">${results
     .map((entry) => {
-      const name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
-      const dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+      let name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
+      let dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+
+      if (name === "spec.md" && dir.includes("/specs/") && entry.path.startsWith("openspec/")) {
+        name = dir.slice(dir.lastIndexOf("/") + 1);
+        dir = dir.slice(0, dir.lastIndexOf("/"));
+      }
+
       return `<li class="tree-search-item" data-path="${escapeHtml(entry.path)}">
         <span class="tree-search-name">${escapeHtml(name)}</span>
         <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
