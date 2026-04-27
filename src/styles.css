@@ -211,8 +211,13 @@ button:hover {
   letter-spacing: 0.03em;
 }
 
-.source-badge[data-active="true"] {
+button.source-badge[data-active="true"] {
   color: var(--color-muted);
+  cursor: pointer;
+}
+
+button.source-badge[data-active="true"]:hover {
+  color: var(--color-accent);
 }
 
 #overview-actions {

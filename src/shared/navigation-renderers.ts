@@ -1,7 +1,7 @@
 import type { TreeNode } from "./file-tree";
 import type { GitHubTreeEntry } from "./github-api";
 import { escapeHtml } from "./html-utils";
-import type { EntryPoint } from "./repo-overview";
+import type { EntryPoint, KnowledgeSources } from "./repo-overview";
 
 export function renderTreeLevel(nodes: TreeNode[]): string {
   return nodes
@@ -58,6 +58,38 @@ export function renderBreadcrumb(path: string): string {
   }
   segments.push(`<span>${escapeHtml(parts[parts.length - 1]!)}</span>`);
   return segments.join('<span class="breadcrumb-sep">/</span>');
+}
+
+export function renderSourceBadges(sources: KnowledgeSources, suggestions: EntryPoint[]): string {
+  const sourceLabels: Array<[keyof KnowledgeSources, string]> = [
+    ["openspec", "Specs"],
+    ["beads", "Issues"],
+    ["wai", "Memory"],
+    ["docs", "Docs"],
+    ["readme", "README"],
+  ];
+
+  const routes = new Map<string, EntryPoint>();
+  for (const suggestion of suggestions) {
+    if (suggestion.kind === "tree" && suggestion.path === "openspec/specs/") {
+      routes.set("openspec", suggestion);
+    } else {
+      routes.set(suggestion.kind, suggestion);
+    }
+  }
+
+  return sourceLabels
+    .map(([key, label]) => {
+      if (!sources[key]) {
+        return `<span class="source-badge" data-active="false">${label}</span>`;
+      }
+
+      const route = routes.get(key);
+      const pathAttr = route?.path ? ` data-path="${escapeHtml(route.path)}"` : "";
+      const kindAttr = route?.kind ? ` data-kind="${escapeHtml(route.kind)}"` : "";
+      return `<button type="button" class="source-badge" data-active="true" data-source="${escapeHtml(key)}"${kindAttr}${pathAttr}>${label}</button>`;
+    })
+    .join("");
 }
 
 export function renderSuggestionList(suggestions: EntryPoint[]): string {

@@ -16,6 +16,7 @@ import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
   renderBreadcrumb,
+  renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
   renderTreeSearchResults,
@@ -351,19 +352,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
     </form>`;
 
   const sourcesEl = $("overview-sources")!;
-  const sourceLabels: [keyof KnowledgeSources, string][] = [
-    ["openspec", "Specs"],
-    ["beads", "Issues"],
-    ["wai", "Memory"],
-    ["docs", "Docs"],
-    ["readme", "README"],
-  ];
-  sourcesEl.innerHTML = sourceLabels
-    .map(
-      ([key, label]) =>
-        `<span class="source-badge" data-active="${sources[key]}">${label}</span>`,
-    )
-    .join("");
+  sourcesEl.innerHTML = renderSourceBadges(sources, suggestions);
 
   const overviewActions = $("overview-actions")!;
   overviewActions.innerHTML = "";
@@ -495,35 +484,49 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
   }
 }
 
+function navigateOverviewItem(kind: string | undefined, path: string | undefined) {
+  if (!currentContext) return;
+
+  if (kind === "beads") {
+    navigate(currentContext, { view: "beads", mode: "list" });
+    return;
+  }
+  if (kind === "wai") {
+    navigate(currentContext, { view: "wai" });
+    return;
+  }
+  if (kind === "docs") {
+    navigate(currentContext, { view: "tree", search: "docs/" });
+    return;
+  }
+  if (kind === "tree") {
+    navigate(currentContext, { view: "tree", search: path === "openspec/specs/" ? path : undefined });
+    return;
+  }
+  if (kind === "history") {
+    navigate(currentContext, { view: "history" });
+    return;
+  }
+  if (path) {
+    navigate(currentContext, { view: "file", path });
+  }
+}
+
 // Suggestion clicks → navigate to file
+// Source badges → navigate to the relevant view
+// Both derive routes from overview metadata.
 document.addEventListener("click", (e) => {
-  const item = (e.target as HTMLElement).closest(".suggestion-item") as HTMLElement | null;
-  if (item && currentContext) {
-    const path = item.dataset.path;
-    const kind = item.dataset.kind;
-    if (kind === "beads") {
-      navigate(currentContext, { view: "beads", mode: "list" });
-      return;
-    }
-    if (kind === "wai") {
-      navigate(currentContext, { view: "wai" });
-      return;
-    }
-    if (kind === "docs") {
-      navigate(currentContext, { view: "tree", search: "docs/" });
-      return;
-    }
-    if (kind === "tree") {
-      navigate(currentContext, { view: "tree" });
-      return;
-    }
-    if (kind === "history") {
-      navigate(currentContext, { view: "history" });
-      return;
-    }
-    if (path) {
-      navigate(currentContext, { view: "file", path });
-    }
+  const target = e.target as HTMLElement;
+
+  const item = target.closest(".suggestion-item") as HTMLElement | null;
+  if (item) {
+    navigateOverviewItem(item.dataset.kind, item.dataset.path);
+    return;
+  }
+
+  const badge = target.closest(".source-badge") as HTMLElement | null;
+  if (badge?.tagName === "BUTTON") {
+    navigateOverviewItem(badge.dataset.kind, badge.dataset.path);
   }
 });
 

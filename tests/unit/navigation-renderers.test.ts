@@ -1,12 +1,42 @@
 import { describe, expect, test } from "bun:test";
 import {
   renderBreadcrumb,
+  renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
   renderTreeSearchResults,
 } from "../../src/shared/navigation-renderers";
 import type { TreeNode } from "../../src/shared/file-tree";
 import type { GitHubTreeEntry } from "../../src/shared/github-api";
+
+describe("renderSourceBadges", () => {
+  test("renders active source badges as semantic buttons with navigation metadata", () => {
+    const html = renderSourceBadges(
+      { openspec: true, beads: true, wai: true, docs: true, readme: true },
+      [
+        { label: "Specs", path: "openspec/specs/", kind: "tree" },
+        { label: "Issues", path: ".beads/issues.jsonl", kind: "beads" },
+        { label: "Project memory", path: ".wai/", kind: "wai" },
+        { label: "Documentation", path: "docs/", kind: "docs" },
+        { label: "README", path: "README.rst", kind: "readme" },
+      ],
+    );
+
+    expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="openspec" data-kind="tree" data-path="openspec/specs/"');
+    expect(html).toContain('data-source="beads" data-kind="beads" data-path=".beads/issues.jsonl"');
+    expect(html).toContain('data-source="readme" data-kind="readme" data-path="README.rst"');
+  });
+
+  test("renders inactive source badges as non-interactive spans", () => {
+    const html = renderSourceBadges(
+      { openspec: false, beads: false, wai: false, docs: false, readme: false },
+      [],
+    );
+
+    expect(html).toContain('<span class="source-badge" data-active="false">Specs</span>');
+    expect(html).not.toContain('type="button" class="source-badge"');
+  });
+});
 
 describe("renderSuggestionList", () => {
   test("renders suggestion items as semantic buttons", () => {
