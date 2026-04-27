@@ -17,6 +17,7 @@ import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries, type TreeNode
 import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
 import { renderBeadsListView, type BeadsFilters } from "./shared/beads-renderer";
 import { beginAsyncUpdate, endAsyncUpdate } from "./shared/loading-accessibility";
+import { buildDocumentTitle } from "./shared/document-title";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -73,12 +74,18 @@ let currentTree: TreeResult | null = null;
 let currentBeads: BeadsLoadResult | null = null;
 let currentBeadsFilters: BeadsFilters = {};
 let currentBeadsSelectedId: string | undefined;
+let currentTarget: RouteTarget | undefined;
 let navDepth = 0;
 
 function showScreen(name: keyof typeof screens) {
   for (const [key, el] of Object.entries(screens)) {
     (el as HTMLElement).hidden = key !== name;
   }
+
+  const screen = name === "loading" || name === "error" || name === "entry"
+    ? name
+    : undefined;
+  document.title = buildDocumentTitle(currentContext, currentTarget, screen ? { screen } : undefined);
 }
 
 function startLoading(region: keyof typeof busyRegions, message: string) {
@@ -99,6 +106,8 @@ function navigate(ctx: RepoContext, target: RouteTarget) {
 }
 
 async function routeTo(target: RouteTarget) {
+  currentTarget = target;
+
   if (target.view === "overview") {
     showScreen("overview");
   } else if (target.view === "file" && target.path) {
@@ -759,6 +768,7 @@ window.addEventListener("popstate", () => {
     currentContext = route.context;
     routeTo(route.target);
   } else {
+    currentTarget = undefined;
     showScreen("entry");
   }
 });
