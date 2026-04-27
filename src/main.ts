@@ -16,6 +16,7 @@ import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries, type TreeNode } from "./shared/file-tree";
 import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
 import { renderBeadsListView, type BeadsFilters } from "./shared/beads-renderer";
+import { beginAsyncUpdate, endAsyncUpdate } from "./shared/loading-accessibility";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -36,6 +37,7 @@ const input = $("repo-input") as HTMLInputElement;
 const repoError = $("repo-error")!;
 const errorMessage = $("error-message")!;
 const errorBack = $("error-back")!;
+const loadingMessage = $("loading-message")!;
 const fileBack = $("file-back")!;
 const fileBreadcrumb = $("file-breadcrumb")!;
 const fileHistory = $("file-history")!;
@@ -54,6 +56,15 @@ const treeBreadcrumb = $("tree-breadcrumb")!;
 const treeSearch = $("tree-search") as HTMLInputElement;
 const treeContent = $("tree-content")!;
 
+const busyRegions = {
+  overview: screens.overview,
+  file: fileContent,
+  beads: beadsContent,
+  history: historyContent,
+  wai: waiContent,
+  tree: treeContent,
+};
+
 const client = new GitHubClient();
 
 /** Current repo context, set after initial load. */
@@ -68,6 +79,15 @@ function showScreen(name: keyof typeof screens) {
   for (const [key, el] of Object.entries(screens)) {
     (el as HTMLElement).hidden = key !== name;
   }
+}
+
+function startLoading(region: keyof typeof busyRegions, message: string) {
+  beginAsyncUpdate(busyRegions[region], loadingMessage, message);
+  showScreen("loading");
+}
+
+function finishLoading(region: keyof typeof busyRegions, message?: string) {
+  endAsyncUpdate(busyRegions[region], loadingMessage, message);
 }
 
 function navigate(ctx: RepoContext, target: RouteTarget) {
@@ -157,7 +177,7 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
   // List mode — load issues and render list/detail view
   currentBeadsSelectedId = target.issueId;
   beadsBreadcrumb.textContent = target.issueId ? `Issues / ${target.issueId}` : "Issues";
-  showScreen("loading");
+  startLoading("beads", "Loading issues…");
 
   try {
     if (!currentBeads) {
@@ -170,7 +190,9 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
     }
     beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
     showScreen("beads");
+    finishLoading("beads", "Issues loaded.");
   } catch (err) {
+    finishLoading("beads", "Failed to load issues.");
     errorMessage.textContent =
       err instanceof Error ? err.message : "Failed to load issues.";
     showScreen("error");
@@ -196,7 +218,7 @@ function rerenderBeadsList() {
 
 async function showHistoryView(path?: string) {
   if (!currentContext) return;
-  showScreen("loading");
+  startLoading("history", path ? "Loading file history…" : "Loading recent history…");
 
   if (path) {
     historyBreadcrumb.innerHTML = `History / ${renderBreadcrumb(path)}`;
@@ -214,7 +236,9 @@ async function showHistoryView(path?: string) {
     const slug = `${currentContext.owner}/${currentContext.repo}`;
     historyContent.innerHTML = renderHistoryOverview(commits, path, slug);
     showScreen("history");
+    finishLoading("history", "History loaded.");
   } catch (err) {
+    finishLoading("history", "Failed to load history.");
     if (err instanceof GitHubApiError) {
       errorMessage.textContent = err.message;
     } else {
@@ -322,7 +346,7 @@ function renderBreadcrumb(path: string): string {
 
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
-  showScreen("loading");
+  startLoading("file", `Loading ${path}…`);
 
   fileBreadcrumb.innerHTML = renderBreadcrumb(path);
 
@@ -335,12 +359,14 @@ async function showFileView(path: string, anchor?: string) {
     );
     fileContent.innerHTML = renderReadableDocument(path, content);
     showScreen("file");
+    finishLoading("file", `${path} loaded.`);
 
     if (anchor) {
       const el = document.getElementById(anchor);
       if (el) el.scrollIntoView();
     }
   } catch (err) {
+    finishLoading("file", `Failed to load ${path}.`);
     if (err instanceof GitHubApiError) {
       errorMessage.textContent = err.message;
     } else {
@@ -410,7 +436,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
 }
 
 async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
-  showScreen("loading");
+  startLoading("overview", "Loading repository…");
 
   try {
     const branch = await client.getDefaultBranch(ref.owner, ref.repo);
@@ -426,10 +452,12 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
     const suggestions = suggestEntryPoints(sources, tree.entries);
 
     renderOverview(ref, branch, sources, suggestions);
+    finishLoading("overview", "Repository loaded.");
 
     const target = initialTarget ?? { view: "overview" as const };
     navigate(currentContext, target);
   } catch (err) {
+    finishLoading("overview", "Failed to load repository.");
     if (err instanceof GitHubApiError) {
       errorMessage.textContent = err.message;
     } else {
@@ -493,7 +521,7 @@ document.addEventListener("submit", (e) => {
 });
 
 async function switchBranch(ref: { owner: string; repo: string }, branch: string) {
-  showScreen("loading");
+  startLoading("overview", `Loading branch ${branch}…`);
   try {
     const tree = await client.getTree(ref.owner, ref.repo, branch);
     currentContext = { owner: ref.owner, repo: ref.repo, branch };
@@ -504,8 +532,10 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
     renderOverview(ref, branch, sources, suggestions);
+    finishLoading("overview", `Branch ${branch} loaded.`);
     navigate(currentContext, { view: "overview" });
   } catch (err) {
+    finishLoading("overview", `Failed to load branch ${branch}.`);
     if (err instanceof GitHubApiError) {
       errorMessage.textContent = `Branch "${branch}" not found or API error.`;
     } else {

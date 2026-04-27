@@ -78,8 +78,8 @@
       </div>
       <section id="tree-content"></section>
     </div>
-    <div id="loading-screen" class="screen" hidden>
-      <p class="loading">Loading repository…</p>
+    <div id="loading-screen" class="screen" hidden role="status" aria-live="polite" aria-atomic="true">
+      <p id="loading-message" class="loading">Loading repository…</p>
     </div>
     <div id="error-screen" class="screen" hidden>
       <p id="error-message" class="error"></p>
