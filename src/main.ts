@@ -13,7 +13,13 @@ import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
-import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries, type TreeNode } from "./shared/file-tree";
+import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
+import {
+  renderBreadcrumb,
+  renderSuggestionList,
+  renderTreeLevel,
+  renderTreeSearchResults,
+} from "./shared/navigation-renderers";
 import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
 import { renderBeadsListView, type BeadsFilters } from "./shared/beads-renderer";
 import { beginAsyncUpdate, endAsyncUpdate } from "./shared/loading-accessibility";
@@ -289,29 +295,6 @@ function renderTreeNodes() {
   treeContent.innerHTML = `<ul class="tree-list">${renderTreeLevel(tree)}</ul>`;
 }
 
-function renderTreeLevel(nodes: TreeNode[]): string {
-  return nodes
-    .map((node) => {
-      if (node.type === "tree") {
-        const children = node.children ?? [];
-        return `<li>
-          <div class="tree-item" data-type="tree" data-path="${escapeHtml(node.path)}">
-            <span class="tree-icon">▶</span>
-            <span class="tree-name">${escapeHtml(node.name)}</span>
-          </div>
-          <ul class="tree-children" hidden>${renderTreeLevel(children)}</ul>
-        </li>`;
-      }
-      return `<li>
-        <div class="tree-item" data-type="blob" data-path="${escapeHtml(node.path)}">
-          <span class="tree-icon">·</span>
-          <span class="tree-name">${escapeHtml(node.name)}</span>
-        </div>
-      </li>`;
-    })
-    .join("");
-}
-
 function renderSearchResults(query: string) {
   if (!currentTree) return;
   const filtered = filterRelevantEntries(currentTree.entries);
@@ -322,35 +305,7 @@ function renderSearchResults(query: string) {
     return;
   }
 
-  treeContent.innerHTML = `<ul class="tree-search-results">${results
-    .map((entry) => {
-      let name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
-      let dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
-
-      if (name === "spec.md" && dir.includes("/specs/") && entry.path.startsWith("openspec/")) {
-        name = dir.slice(dir.lastIndexOf("/") + 1);
-        dir = dir.slice(0, dir.lastIndexOf("/"));
-      }
-
-      return `<li class="tree-search-item" data-path="${escapeHtml(entry.path)}">
-        <span class="tree-search-name">${escapeHtml(name)}</span>
-        <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
-      </li>`;
-    })
-    .join("")}</ul>`;
-}
-
-function renderBreadcrumb(path: string): string {
-  const parts = path.split("/");
-  if (parts.length <= 1) return escapeHtml(path);
-
-  const segments: string[] = [];
-  for (let i = 0; i < parts.length - 1; i++) {
-    const dirPath = parts.slice(0, i + 1).join("/");
-    segments.push(`<button class="breadcrumb-seg" data-dir="${escapeHtml(dirPath)}">${escapeHtml(parts[i]!)}</button>`);
-  }
-  segments.push(`<span>${escapeHtml(parts[parts.length - 1]!)}</span>`);
-  return segments.join('<span class="breadcrumb-sep">/</span>');
+  treeContent.innerHTML = renderTreeSearchResults(results);
 }
 
 async function showFileView(path: string, anchor?: string) {
@@ -423,21 +378,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
     emptyEl.hidden = true;
     suggestionsEl.innerHTML = `
       <h3>Start reading</h3>
-      <ul class="suggestion-list">
-        ${suggestions
-          .map(
-            (s) =>
-              `<li class="suggestion-item" data-path="${escapeHtml(s.path)}" data-kind="${escapeHtml(s.kind)}">
-                <span class="label">${escapeHtml(s.label)}</span>
-                <span class="path">${escapeHtml(s.path)}</span>
-              </li>`,
-          )
-          .join("")}
-        <li class="suggestion-item" data-kind="history">
-          <span class="label">Recent history</span>
-          <span class="path">Latest commits across the repository</span>
-        </li>
-      </ul>
+      ${renderSuggestionList(suggestions)}
       <div class="overview-search-container">
         <input id="overview-search" type="text" placeholder="Search files…" autocomplete="off" />
       </div>`;

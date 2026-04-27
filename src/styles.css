@@ -258,6 +258,7 @@ button:hover {
 
 .suggestion-item {
   display: flex;
+  width: 100%;
   align-items: baseline;
   gap: 0.75rem;
   padding: 0.65rem 0.85rem;
@@ -266,18 +267,19 @@ button:hover {
   background: var(--color-surface);
   cursor: pointer;
   transition: background 0.12s;
+  text-align: left;
 }
 
-.suggestion-item:first-child {
+.suggestion-list > li:first-child .suggestion-item {
   border-radius: 8px 8px 0 0;
 }
 
-.suggestion-item:last-child {
+.suggestion-list > li:last-child .suggestion-item {
   border-bottom: 1px solid var(--color-border);
   border-radius: 0 0 8px 8px;
 }
 
-.suggestion-item:only-child {
+.suggestion-list > li:only-child .suggestion-item {
   border-radius: 8px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -287,7 +289,8 @@ button:hover {
   border-color: var(--color-accent);
 }
 
-.suggestion-item:hover + .suggestion-item {
+.suggestion-list > li:hover + li .suggestion-item,
+.suggestion-list > li:focus-within + li .suggestion-item {
   border-top-color: var(--color-accent);
 }
 
@@ -366,6 +369,23 @@ button:hover {
   flex-shrink: 0;
   font-size: 0.8rem;
   padding: 0.3rem 0.6rem;
+}
+
+.suggestion-item,
+.tree-item,
+.tree-search-item {
+  appearance: none;
+  border-radius: 0;
+}
+
+.suggestion-item:focus-visible,
+.tree-item:focus-visible,
+.tree-search-item:focus-visible,
+.breadcrumb-seg:focus-visible,
+.changed-path-link:focus-visible,
+.wai-artifact-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 
 /* ─── Content panels ─── */
@@ -1027,13 +1047,17 @@ details[open] > .wai-summary::before {
 
 .tree-item {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem 0.75rem;
+  border: none;
+  background: transparent;
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 0.8rem;
   transition: background 0.1s;
+  text-align: left;
 }
 
 .tree-item:hover {
@@ -1075,11 +1099,15 @@ details[open] > .wai-summary::before {
 
 .tree-search-item {
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.4rem 0.75rem;
+  border: none;
+  background: transparent;
   cursor: pointer;
   transition: background 0.1s;
+  text-align: left;
 }
 
 .tree-search-item:hover {
