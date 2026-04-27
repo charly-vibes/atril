@@ -58,5 +58,7 @@ describe("renderReadableDocument (OpenSpec add-unified-repo-reader:4.3)", () => 
     expect(html).toContain('class="openspec-heading openspec-heading-requirement"');
     expect(html).toContain('class="openspec-details openspec-details-scenario"');
     expect(html).toContain('class="openspec-heading openspec-heading-scenario"');
+    expect(html).toContain('>Rendering</h3>');
+    expect(html).not.toContain('>Requirement: Rendering</h3>');
   });
 });

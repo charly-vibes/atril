@@ -23,6 +23,11 @@ function slugifyHeading(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function displayOpenSpecHeading(text: string): string {
+  if (text.startsWith("Requirement:")) return text.slice("Requirement:".length).trim();
+  return text;
+}
+
 function processOpenSpecTokens(tokens: Token[]): Token[] {
   const result: Token[] = [];
   const stack: { depth: number }[] = [];
@@ -38,7 +43,8 @@ function processOpenSpecTokens(tokens: Token[]): Token[] {
 
       const id = slugifyHeading(token.text);
       const kind = token.text.startsWith("Scenario:") ? "scenario" : "requirement";
-      const headingHtml = `<h${token.depth} id="${escapeHtml(id)}" class="openspec-heading openspec-heading-${kind}">${token.text}</h${token.depth}>`;
+      const headingText = displayOpenSpecHeading(token.text);
+      const headingHtml = `<h${token.depth} id="${escapeHtml(id)}" class="openspec-heading openspec-heading-${kind}">${escapeHtml(headingText)}</h${token.depth}>`;
       const htmlStart = `<details class="openspec-details openspec-details-${kind}"><summary class="openspec-summary">${headingHtml}</summary>\n`;
       result.push({ type: "html", raw: htmlStart, text: htmlStart } as Tokens.HTML);
       
