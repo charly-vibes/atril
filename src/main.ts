@@ -787,7 +787,7 @@ function applyTheme(theme: "light" | "dark" | "auto") {
   if (theme !== "auto") {
     document.documentElement.setAttribute("data-theme", theme);
   }
-  themeToggle.textContent = theme === "dark" ? "Light" : theme === "light" ? "Dark" : "Auto";
+  themeToggle.textContent = theme === "dark" ? "☀ Light" : theme === "light" ? "☾ Dark" : "◑ Auto";
 }
 
 const savedTheme = localStorage.getItem("atril-theme") as "light" | "dark" | null;
