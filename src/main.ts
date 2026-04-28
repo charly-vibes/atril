@@ -328,7 +328,7 @@ async function showFileView(path: string, anchor?: string) {
       currentContext.branch,
       path,
     );
-    fileContent.innerHTML = renderReadableDocument(path, content, currentTree.entries);
+    fileContent.innerHTML = renderReadableDocument(path, content, currentTree?.entries ?? []);
     showScreen("file");
     finishLoading("file", `${path} loaded.`);
 
