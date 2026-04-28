@@ -23,7 +23,7 @@ import {
   renderTreeSearchResults,
 } from "./shared/navigation-renderers";
 import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
-import { renderBeadsListView, type BeadsFilters } from "./shared/beads-renderer";
+import { renderBeadsListView, resolveVisibleSelectedIssueId, type BeadsFilters } from "./shared/beads-renderer";
 import { beginAsyncUpdate, endAsyncUpdate } from "./shared/loading-accessibility";
 import { buildDocumentTitle } from "./shared/document-title";
 
@@ -206,6 +206,7 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
         currentContext.branch,
       );
     }
+    currentBeadsSelectedId = resolveVisibleSelectedIssueId(currentBeads, currentBeadsSelectedId, currentBeadsFilters);
     beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
     showScreen("beads");
     finishLoading("beads", "Issues loaded.");
@@ -223,6 +224,7 @@ function rerenderBeadsList() {
   const wasSearch = activeEl?.classList.contains("beads-search");
   const cursorPos = wasSearch ? (activeEl as HTMLInputElement).selectionStart : null;
 
+  currentBeadsSelectedId = resolveVisibleSelectedIssueId(currentBeads, currentBeadsSelectedId, currentBeadsFilters);
   beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
 
   if (wasSearch) {

@@ -152,6 +152,18 @@ function renderFilterToolbar(filters: BeadsFilters): string {
   </div>`;
 }
 
+export function resolveVisibleSelectedIssueId(
+  result: BeadsLoadResult,
+  selectedId?: string,
+  filters?: BeadsFilters,
+): string | undefined {
+  const activeFilters = filters ?? {};
+  const filtered = filterIssues(result.issues, activeFilters);
+  if (filtered.length === 0) return undefined;
+  if (selectedId && filtered.some((issue) => issue.id === selectedId)) return selectedId;
+  return filtered[0]?.id;
+}
+
 /** Render the issue list view. If selectedId matches an issue, show its detail panel. */
 export function renderBeadsListView(
   result: BeadsLoadResult,
@@ -168,14 +180,14 @@ export function renderBeadsListView(
 
   const activeFilters = filters ?? {};
   const filtered = filterIssues(result.issues, activeFilters);
-
-  const selected = selectedId
-    ? result.issues.find((i) => i.id === selectedId)
+  const visibleSelectedId = resolveVisibleSelectedIssueId(result, selectedId, activeFilters);
+  const selected = visibleSelectedId
+    ? result.issues.find((i) => i.id === visibleSelectedId)
     : undefined;
 
   const listItems = filtered.length > 0
     ? filtered
-        .map((issue) => renderIssueListItem(issue, issue.id === selectedId))
+        .map((issue) => renderIssueListItem(issue, issue.id === visibleSelectedId))
         .join("")
     : `<li class="beads-empty-filter">No issues match the current filters</li>`;
 

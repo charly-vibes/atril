@@ -66,10 +66,15 @@ describe("renderBeadsListView", () => {
     expect(html).not.toContain('class="beads-list-item selected" data-issue-id="a-2"');
   });
 
-  test("shows placeholder when no issue selected", () => {
-    const result = makeResult([makeIssue()]);
+  test("auto-selects the first visible issue when no issue is selected", () => {
+    const result = makeResult([
+      makeIssue({ id: "a-1", title: "First issue", description: "First detail" }),
+      makeIssue({ id: "a-2", title: "Second issue", description: "Second detail" }),
+    ]);
     const html = renderBeadsListView(result);
-    expect(html).toContain("Select an issue to view details");
+    expect(html).toContain('class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).toContain("First detail");
+    expect(html).not.toContain("Select an issue to view details");
   });
 
   test("renders issue metadata", () => {
@@ -169,6 +174,18 @@ describe("renderBeadsListView", () => {
     const html = renderBeadsListView(result, undefined, { status: "open" });
     expect(html).toContain("Open task");
     expect(html).not.toContain('data-issue-id="a-2"');
+  });
+
+  test("falls back to the first filtered issue when the selected issue is not visible", () => {
+    const result = makeResult([
+      makeIssue({ id: "a-1", status: "open", title: "Open issue", description: "Open detail" }),
+      makeIssue({ id: "a-2", status: "closed", title: "Closed issue", description: "Closed detail" }),
+    ]);
+    const html = renderBeadsListView(result, "a-2", { status: "open" });
+    expect(html).toContain('class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).not.toContain('class="beads-list-item selected" data-issue-id="a-2"');
+    expect(html).toContain("Open detail");
+    expect(html).not.toContain("Closed detail");
   });
 
   test("shows empty filter message when no issues match filters", () => {
