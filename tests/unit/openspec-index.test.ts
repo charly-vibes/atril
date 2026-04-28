@@ -56,6 +56,20 @@ describe("buildOpenSpecIndex", () => {
     expect(index.capabilityAffectedBy["spec-viewer"]).toContain("add-unified-repo-reader");
   });
 
+  test("excludes archived delta specs from the active capability mapping", () => {
+    const entries = tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/specs/platform/spec.md",
+      "openspec/changes/archive/2026-01-15-add-legacy-nav/specs/platform/spec.md",
+    );
+
+    const index = buildOpenSpecIndex(entries);
+
+    expect(index.changeAffects["add-reader"]).toEqual(["platform"]);
+    expect(index.capabilityAffectedBy["platform"]).toEqual(["add-reader"]);
+    expect(index.changeAffects["2026-01-15-add-legacy-nav"]).toBeUndefined();
+  });
+
   test("returns empty index when no openspec directory exists", () => {
     const entries = tree("README.md", "src/index.ts");
     const index = buildOpenSpecIndex(entries);

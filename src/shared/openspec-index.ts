@@ -23,6 +23,23 @@ const SPEC_PREFIX = "openspec/specs/";
 const CHANGE_PREFIX = "openspec/changes/";
 const ARCHIVE_PREFIX = "openspec/changes/archive/";
 
+function getCapabilityName(path: string): string | undefined {
+  const match = path.match(/^openspec\/specs\/([^/]+)\//);
+  return match?.[1];
+}
+
+function getArchivedChangeId(path: string): string | undefined {
+  const match = path.match(/^openspec\/changes\/archive\/([^/]+)\//);
+  return match?.[1];
+}
+
+function getActiveChangePathInfo(path: string): { changeId: string; capability?: string } | undefined {
+  const match = path.match(/^openspec\/changes\/([^/]+)\/(?:specs\/([^/]+)\/.*)?/);
+  if (!match) return undefined;
+  if (path.startsWith(ARCHIVE_PREFIX)) return undefined;
+  return { changeId: match[1]!, capability: match[2] };
+}
+
 /**
  * Build an index of OpenSpec artifacts from a repository tree.
  * Pure function — works entirely from tree entries without API calls.
@@ -43,47 +60,27 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
   for (const entry of entries) {
     if (entry.type !== "blob") continue;
 
-    // Capabilities: openspec/specs/<name>/...
-    if (entry.path.startsWith(SPEC_PREFIX)) {
-      const rest = entry.path.slice(SPEC_PREFIX.length);
-      const slashIdx = rest.indexOf("/");
-      if (slashIdx > 0) {
-        const name = rest.slice(0, slashIdx);
-        capabilitySet.add(name);
-        (capabilityFiles[name] ??= []).push(entry.path);
-      }
+    const capabilityName = getCapabilityName(entry.path);
+    if (capabilityName) {
+      capabilitySet.add(capabilityName);
+      (capabilityFiles[capabilityName] ??= []).push(entry.path);
       continue;
     }
 
-    // Archived changes: openspec/changes/archive/<id>/...
-    if (entry.path.startsWith(ARCHIVE_PREFIX)) {
-      const rest = entry.path.slice(ARCHIVE_PREFIX.length);
-      const slashIdx = rest.indexOf("/");
-      if (slashIdx > 0) {
-        archivedSet.add(rest.slice(0, slashIdx));
-      }
+    const archivedChangeId = getArchivedChangeId(entry.path);
+    if (archivedChangeId) {
+      archivedSet.add(archivedChangeId);
       continue;
     }
 
-    // Active changes: openspec/changes/<id>/...
-    if (entry.path.startsWith(CHANGE_PREFIX)) {
-      const rest = entry.path.slice(CHANGE_PREFIX.length);
-      const slashIdx = rest.indexOf("/");
-      if (slashIdx > 0) {
-        const changeId = rest.slice(0, slashIdx);
-        changeSet.add(changeId);
-        (changeFiles[changeId] ??= []).push(entry.path);
-
-        // Delta specs: changes/<change-id>/specs/<capability>/...
-        const afterId = rest.slice(slashIdx + 1);
-        if (afterId.startsWith("specs/")) {
-          const specRest = afterId.slice("specs/".length);
-          const capSlash = specRest.indexOf("/");
-          if (capSlash > 0) {
-            deltaSpecs.push({ changeId, capability: specRest.slice(0, capSlash) });
-          }
-        }
+    const activeChange = getActiveChangePathInfo(entry.path);
+    if (activeChange) {
+      changeSet.add(activeChange.changeId);
+      (changeFiles[activeChange.changeId] ??= []).push(entry.path);
+      if (activeChange.capability) {
+        deltaSpecs.push({ changeId: activeChange.changeId, capability: activeChange.capability });
       }
+      continue;
     }
   }
 
