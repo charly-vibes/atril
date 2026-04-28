@@ -3,6 +3,7 @@ import {
   buildFileTree,
   fuzzyFilterEntries,
   filterRelevantEntries,
+  hasUbiquitousLanguage,
   type TreeNode,
 } from "../../src/shared/file-tree";
 import type { GitHubTreeEntry } from "../../src/shared/github-api";
@@ -267,5 +268,40 @@ describe("filterRelevantEntries", () => {
     ];
     const filtered = filterRelevantEntries(entries);
     expect(filtered).toHaveLength(0);
+  });
+});
+
+describe("hasUbiquitousLanguage", () => {
+  test("returns true when README.md is present at the canonical path", () => {
+    const entries: GitHubTreeEntry[] = [
+      dir(".wai"),
+      dir(".wai/resources"),
+      dir(".wai/resources/ubiquitous-language"),
+      blob(".wai/resources/ubiquitous-language/README.md"),
+    ];
+    expect(hasUbiquitousLanguage(entries)).toBe(true);
+  });
+
+  test("returns false when ubiquitous-language directory is absent", () => {
+    const entries: GitHubTreeEntry[] = [
+      dir(".wai"),
+      dir(".wai/resources"),
+      blob(".wai/resources/reflections/foo.md"),
+    ];
+    expect(hasUbiquitousLanguage(entries)).toBe(false);
+  });
+
+  test("returns false when directory exists but README.md is missing", () => {
+    const entries: GitHubTreeEntry[] = [
+      dir(".wai"),
+      dir(".wai/resources"),
+      dir(".wai/resources/ubiquitous-language"),
+      blob(".wai/resources/ubiquitous-language/contexts/core.md"),
+    ];
+    expect(hasUbiquitousLanguage(entries)).toBe(false);
+  });
+
+  test("returns false for an empty tree", () => {
+    expect(hasUbiquitousLanguage([])).toBe(false);
   });
 });

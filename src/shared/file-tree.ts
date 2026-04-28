@@ -156,6 +156,15 @@ function fuzzyScore(query: string, target: string): number {
   return qi === query.length ? score : 0;
 }
 
+const UL_INDEX_PATH = ".wai/resources/ubiquitous-language/README.md";
+
+/**
+ * Returns true when the flat tree contains the ubiquitous language index file.
+ */
+export function hasUbiquitousLanguage(entries: GitHubTreeEntry[]): boolean {
+  return entries.some((e) => e.path === UL_INDEX_PATH && e.type === "blob");
+}
+
 function basename(path: string): string {
   const i = path.lastIndexOf("/");
   return i < 0 ? path : path.slice(i + 1);
