@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   renderBreadcrumb,
+  renderFileBreadcrumb,
   renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
@@ -94,5 +95,29 @@ describe("renderBreadcrumb", () => {
     expect(html).toContain('type="button" class="breadcrumb-seg" data-dir="docs"');
     expect(html).toContain('type="button" class="breadcrumb-seg" data-dir="docs/guides"');
     expect(html).toContain('<span>intro.md</span>');
+  });
+});
+
+describe("renderFileBreadcrumb", () => {
+  test("renders a canonical spec link for change delta spec files when the canonical spec exists", () => {
+    const html = renderFileBreadcrumb(
+      "openspec/changes/add-reader/specs/platform/spec.md",
+      [
+        { path: "openspec/specs/platform/spec.md", type: "blob", sha: "abc" },
+      ],
+    );
+
+    expect(html).toContain('class="canonical-spec-link"');
+    expect(html).toContain('data-path="openspec/specs/platform/spec.md"');
+    expect(html).toContain('View canonical spec');
+  });
+
+  test("omits the canonical spec link when the canonical spec does not exist", () => {
+    const html = renderFileBreadcrumb(
+      "openspec/changes/add-reader/specs/repo-overview/spec.md",
+      [],
+    );
+
+    expect(html).not.toContain('class="canonical-spec-link"');
   });
 });

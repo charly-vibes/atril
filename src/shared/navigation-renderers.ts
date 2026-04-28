@@ -60,6 +60,23 @@ export function renderBreadcrumb(path: string): string {
   return segments.join('<span class="breadcrumb-sep">/</span>');
 }
 
+function getCanonicalSpecPath(path: string): string | undefined {
+  const match = path.match(/^openspec\/changes\/[^/]+\/specs\/([^/]+)\/spec\.md$/);
+  if (!match) return undefined;
+  return `openspec/specs/${match[1]!}/spec.md`;
+}
+
+export function renderFileBreadcrumb(path: string, entries: GitHubTreeEntry[]): string {
+  const breadcrumb = renderBreadcrumb(path);
+  const canonicalSpecPath = getCanonicalSpecPath(path);
+  if (!canonicalSpecPath) return breadcrumb;
+
+  const hasCanonical = entries.some((entry) => entry.path === canonicalSpecPath && entry.type === "blob");
+  if (!hasCanonical) return breadcrumb;
+
+  return `${breadcrumb}<span class="breadcrumb-meta-sep">·</span><button type="button" class="canonical-spec-link" data-path="${escapeHtml(canonicalSpecPath)}">View canonical spec</button>`;
+}
+
 export function renderSourceBadges(sources: KnowledgeSources, suggestions: EntryPoint[]): string {
   const sourceLabels: Array<[keyof KnowledgeSources, string]> = [
     ["openspec", "Specs"],

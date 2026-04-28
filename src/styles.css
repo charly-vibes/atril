@@ -367,6 +367,25 @@ button.source-badge[data-active="true"]:hover {
   margin: 0 0.1rem;
 }
 
+.breadcrumb-meta-sep {
+  color: var(--color-muted);
+  margin: 0 0.45rem;
+}
+
+.canonical-spec-link {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.canonical-spec-link:hover {
+  text-decoration: underline;
+}
+
 #file-nav button,
 #beads-nav button,
 #history-nav button,
@@ -388,7 +407,8 @@ button.source-badge[data-active="true"]:hover {
 .tree-search-item:focus-visible,
 .breadcrumb-seg:focus-visible,
 .changed-path-link:focus-visible,
-.wai-artifact-link:focus-visible {
+.wai-artifact-link:focus-visible,
+.canonical-spec-link:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }

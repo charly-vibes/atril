@@ -16,6 +16,7 @@ import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
   renderBreadcrumb,
+  renderFileBreadcrumb,
   renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
@@ -313,7 +314,7 @@ async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   startLoading("file", `Loading ${path}…`);
 
-  fileBreadcrumb.innerHTML = renderBreadcrumb(path);
+  fileBreadcrumb.innerHTML = renderFileBreadcrumb(path, currentTree?.entries ?? []);
 
   try {
     const content = await client.getFileContent(
@@ -430,6 +431,15 @@ document.addEventListener("input", (e) => {
 
 // Branch toggle → show input, submit → reload with new branch
 document.addEventListener("click", (e) => {
+  const canonicalSpecLink = (e.target as HTMLElement).closest(".canonical-spec-link") as HTMLElement | null;
+  if (canonicalSpecLink && currentContext) {
+    const path = canonicalSpecLink.dataset.path;
+    if (path) {
+      navigate(currentContext, { view: "file", path });
+      return;
+    }
+  }
+
   const toggle = (e.target as HTMLElement).closest(".branch-toggle") as HTMLElement | null;
   if (toggle) {
     const form = toggle.nextElementSibling as HTMLFormElement | null;
