@@ -14,3 +14,7 @@ bun.lock
 
 # Local agent settings
 .claude/settings.local.json
+
+# Local tooling / scratch space
+.playwright-mcp/
+exploration/
