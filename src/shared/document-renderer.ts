@@ -1,4 +1,5 @@
 import { marked, Renderer, type Token, type Tokens } from "marked";
+import type { GitHubTreeEntry } from "./github-api";
 import { escapeHtml } from "./html-utils";
 
 const renderer = new Renderer();
@@ -85,10 +86,66 @@ function renderOrg(content: string): string {
     .join("");
 }
 
-export function renderReadableDocument(path: string, content: string): string {
+function buildOpenSpecCapabilityLinks(entries: GitHubTreeEntry[]): Map<string, string> {
+  const links = new Map<string, string>();
+  for (const entry of entries) {
+    const match = entry.path.match(/^openspec\/specs\/([^/]+)\/spec\.md$/);
+    if (match) links.set(match[1]!, entry.path);
+  }
+  return links;
+}
+
+function linkBacktickedCapabilities(line: string, capabilityLinks: Map<string, string>): string {
+  return line.replace(/`([a-z0-9-]+)`/gi, (match, name: string) => {
+    const path = capabilityLinks.get(name);
+    return path ? `[${name}](${path})` : match;
+  });
+}
+
+function linkSeeAlsoCapabilities(line: string, capabilityLinks: Map<string, string>): string {
+  if (!/\bSee also:\s*/.test(line)) return line;
+
+  const capabilityNames = [...capabilityLinks.keys()].sort((a, b) => b.length - a.length);
+  let linked = line;
+  for (const name of capabilityNames) {
+    const path = capabilityLinks.get(name)!;
+    const pattern = new RegExp(`(?<![\\w/])${escapeRegex(name)}(?![\\w/])`, "g");
+    linked = linked.replace(pattern, `[${name}](${path})`);
+  }
+  return linked;
+}
+
+function autoLinkOpenSpecReferences(content: string, entries: GitHubTreeEntry[]): string {
+  const capabilityLinks = buildOpenSpecCapabilityLinks(entries);
+  if (capabilityLinks.size === 0) return content;
+
+  const lines = content.split("\n");
+  let inFence = false;
+
+  return lines
+    .map((line) => {
+      if (/^```/.test(line.trim())) {
+        inFence = !inFence;
+        return line;
+      }
+      if (inFence || /^(    |\t)/.test(line)) return line;
+
+      let linked = linkBacktickedCapabilities(line, capabilityLinks);
+      linked = linkSeeAlsoCapabilities(linked, capabilityLinks);
+      return linked;
+    })
+    .join("\n");
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function renderReadableDocument(path: string, content: string, entries: GitHubTreeEntry[] = []): string {
   if (path.endsWith(".md")) {
     if (path.includes("openspec/")) {
-      const tokens = marked.lexer(content);
+      const preprocessed = autoLinkOpenSpecReferences(content, entries);
+      const tokens = marked.lexer(preprocessed);
       const modifiedTokens = processOpenSpecTokens(tokens);
       // @ts-ignore - marked expects links object on tokens array
       modifiedTokens.links = tokens.links;
