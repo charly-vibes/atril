@@ -3,6 +3,8 @@ import { renderBeadsListView, filterIssues } from "../../src/shared/beads-render
 import type { BeadsIssue, BeadsLoadResult } from "../../src/shared/beads-loader";
 import type { GitHubTreeEntry } from "../../src/shared/github-api";
 
+const styles = await Bun.file("src/styles.css").text();
+
 function makeIssue(overrides: Partial<BeadsIssue> = {}): BeadsIssue {
   return {
     id: "test-1",
@@ -33,7 +35,7 @@ describe("renderBeadsListView", () => {
     expect(html).toContain("main");
   });
 
-  test("renders list of issues", () => {
+  test("renders issue list items as semantic buttons", () => {
     const result = makeResult([
       makeIssue({ id: "a-1", title: "Fix login bug" }),
       makeIssue({ id: "a-2", title: "Add search" }),
@@ -41,11 +43,11 @@ describe("renderBeadsListView", () => {
     const html = renderBeadsListView(result);
     expect(html).toContain("Fix login bug");
     expect(html).toContain("Add search");
-    expect(html).toContain('data-issue-id="a-1"');
-    expect(html).toContain('data-issue-id="a-2"');
+    expect(html).toContain('type="button" class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).toContain('type="button" class="beads-list-item" data-issue-id="a-2"');
   });
 
-  test("renders detail panel when issue is selected", () => {
+  test("renders detail panel with a copy-link button when issue is selected", () => {
     const result = makeResult([
       makeIssue({ id: "a-1", title: "Fix login bug", description: "Login fails on mobile" }),
       makeIssue({ id: "a-2", title: "Add search" }),
@@ -54,6 +56,8 @@ describe("renderBeadsListView", () => {
     expect(html).toContain("Fix login bug");
     expect(html).toContain("Login fails on mobile");
     expect(html).toContain("beads-detail");
+    expect(html).toContain('class="copy-link-button" data-copy-scope="issue"');
+    expect(html).toContain('aria-label="Copy link to this issue"');
   });
 
   test("marks selected issue in list", () => {
@@ -62,8 +66,8 @@ describe("renderBeadsListView", () => {
       makeIssue({ id: "a-2", title: "Other one" }),
     ]);
     const html = renderBeadsListView(result, "a-1");
-    expect(html).toContain('class="beads-list-item selected" data-issue-id="a-1"');
-    expect(html).not.toContain('class="beads-list-item selected" data-issue-id="a-2"');
+    expect(html).toContain('type="button" class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).not.toContain('type="button" class="beads-list-item selected" data-issue-id="a-2"');
   });
 
   test("auto-selects the first visible issue when no issue is selected", () => {
@@ -72,7 +76,7 @@ describe("renderBeadsListView", () => {
       makeIssue({ id: "a-2", title: "Second issue", description: "Second detail" }),
     ]);
     const html = renderBeadsListView(result);
-    expect(html).toContain('class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).toContain('type="button" class="beads-list-item selected" data-issue-id="a-1"');
     expect(html).toContain("First detail");
     expect(html).not.toContain("Select an issue to view details");
   });
@@ -119,6 +123,16 @@ describe("renderBeadsListView", () => {
     const html = renderBeadsListView(result);
     expect(html).toContain("beads-sync");
     expect(html).toContain("beads-freshness");
+  });
+
+  test("freshness indicator includes the year in the date", () => {
+    const result: BeadsLoadResult = {
+      issues: [makeIssue()],
+      fetchedAt: "2026-04-23T12:00:00Z",
+      branch: "main",
+    };
+    const html = renderBeadsListView(result);
+    expect(html).toContain("Apr 23, 2026");
   });
 
   test("escapes HTML in issue content", () => {
@@ -192,8 +206,8 @@ describe("renderBeadsListView", () => {
       makeIssue({ id: "a-2", status: "closed", title: "Closed issue", description: "Closed detail" }),
     ]);
     const html = renderBeadsListView(result, "a-2", { status: "open" });
-    expect(html).toContain('class="beads-list-item selected" data-issue-id="a-1"');
-    expect(html).not.toContain('class="beads-list-item selected" data-issue-id="a-2"');
+    expect(html).toContain('type="button" class="beads-list-item selected" data-issue-id="a-1"');
+    expect(html).not.toContain('type="button" class="beads-list-item selected" data-issue-id="a-2"');
     expect(html).toContain("Open detail");
     expect(html).not.toContain("Closed detail");
   });
@@ -206,12 +220,28 @@ describe("renderBeadsListView", () => {
     expect(html).toContain('No issues matching "xyznonexistent"');
   });
 
-  test("shows empty filter message when no issues match filters", () => {
+  test("shows a single filter empty state naming the active filters", () => {
     const result = makeResult([
-      makeIssue({ id: "a-1", status: "open" }),
+      makeIssue({ id: "a-1", status: "open", issue_type: "bug", priority: 1 }),
     ]);
-    const html = renderBeadsListView(result, undefined, { status: "closed" });
-    expect(html).toContain("No issues match the current filters");
+    const html = renderBeadsListView(result, undefined, {
+      status: "closed",
+      type: "task",
+      priority: 2,
+    });
+
+    expect(html).toContain("No issues matching status: closed, type: task, priority: P2");
+    expect(html).toContain('class="beads-filters-clear"');
+    expect(html).not.toContain("Select an issue to view details");
+    expect(html).not.toContain('class="beads-detail-panel"');
+  });
+});
+
+describe("beads keyboard accessibility", () => {
+  test("shows focus-visible styling for issue list and issue navigation buttons", () => {
+    expect(styles).toContain(".beads-list-item:focus-visible");
+    expect(styles).toContain(".beads-dep-link:focus-visible");
+    expect(styles).toContain(".issue-ref-link:focus-visible");
   });
 });
 

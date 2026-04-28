@@ -31,28 +31,28 @@ function formatPriority(p: number): string {
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function renderIssueListItem(issue: BeadsIssue, selected: boolean): string {
   const priority = formatPriority(issue.priority);
   const status = STATUS_LABELS[issue.status] ?? issue.status;
   const selectedClass = selected ? " selected" : "";
-  return `<li class="beads-list-item${selectedClass}" data-issue-id="${escapeHtml(issue.id)}">
+  return `<li><button type="button" class="beads-list-item${selectedClass}" data-issue-id="${escapeHtml(issue.id)}">
     <span class="beads-item-title">${escapeHtml(issue.title)}</span>
     <span class="beads-item-meta">
       <span class="beads-badge beads-status-${escapeHtml(issue.status)}">${escapeHtml(status)}</span>
       <span class="beads-badge beads-priority">${escapeHtml(priority)}</span>
       <span class="beads-badge beads-type">${escapeHtml(issue.issue_type)}</span>
     </span>
-  </li>`;
+  </button></li>`;
 }
 
 function renderReferences(refs: IssueReference[]): string {
   if (refs.length === 0) return "";
   const items = refs.map((ref) => {
     if (ref.status === "navigable" && ref.path) {
-      return `<li><button class="issue-ref-link" data-path="${escapeHtml(ref.path)}">${escapeHtml(ref.text)}</button> <span class="ref-path">${escapeHtml(ref.path)}</span></li>`;
+      return `<li><button type="button" class="issue-ref-link" data-path="${escapeHtml(ref.path)}">${escapeHtml(ref.text)}</button> <span class="ref-path">${escapeHtml(ref.path)}</span></li>`;
     }
     if (ref.status === "external") {
       return `<li><span class="ref-external">${escapeHtml(ref.text)}</span> <span class="ref-hint">(external)</span></li>`;
@@ -89,7 +89,7 @@ function renderIssueDetail(issue: BeadsIssue, treeEntries?: GitHubTreeEntry[]): 
     ? `<div class="beads-deps">
         <h4>Dependencies</h4>
         <ul>${issue.dependencies.map((d) =>
-          `<li><button class="beads-dep-link" data-issue-id="${escapeHtml(d.depends_on_id)}">${escapeHtml(d.depends_on_id)}</button> <span class="beads-dep-type">(${escapeHtml(d.type)})</span></li>`
+          `<li><button type="button" class="beads-dep-link" data-issue-id="${escapeHtml(d.depends_on_id)}">${escapeHtml(d.depends_on_id)}</button> <span class="beads-dep-type">(${escapeHtml(d.type)})</span></li>`
         ).join("")}</ul>
       </div>`
     : "";
@@ -98,7 +98,10 @@ function renderIssueDetail(issue: BeadsIssue, treeEntries?: GitHubTreeEntry[]): 
   const refs = treeEntries ? resolveIssueReferences(issueText, treeEntries) : [];
 
   return `<article class="beads-detail">
-    <h3>${escapeHtml(issue.title)}</h3>
+    <div class="beads-detail-header">
+      <h3>${escapeHtml(issue.title)}</h3>
+      <button type="button" class="copy-link-button" data-copy-scope="issue" aria-label="Copy link to this issue">🔗</button>
+    </div>
     <table class="beads-meta">${metaRows.join("")}</table>
     ${issue.description ? `<div class="beads-description"><p>${escapeHtml(issue.description).replace(/\n/g, "<br>")}</p></div>` : ""}
     ${deps}
@@ -123,10 +126,42 @@ export function filterIssues(issues: BeadsIssue[], filters: BeadsFilters): Beads
 }
 
 function renderEmptyFilterMessage(filters: BeadsFilters): string {
-  if (filters.search) {
+  if (filters.search && !filters.status && !filters.type && filters.priority === undefined) {
     return `No issues matching "${escapeHtml(filters.search)}"`;
   }
-  return "No issues match the current filters";
+
+  const criteria: string[] = [];
+
+  if (filters.search) {
+    criteria.push(`search: "${escapeHtml(filters.search)}"`);
+  }
+  if (filters.status) {
+    criteria.push(`status: ${escapeHtml(filters.status)}`);
+  }
+  if (filters.type) {
+    criteria.push(`type: ${escapeHtml(filters.type)}`);
+  }
+  if (filters.priority !== undefined) {
+    criteria.push(`priority: ${escapeHtml(formatPriority(filters.priority))}`);
+  }
+
+  if (criteria.length > 0) {
+    return `No issues matching ${criteria.join(", ")}`;
+  }
+
+  return "No issues found";
+}
+
+function hasDropdownFilters(filters: BeadsFilters): boolean {
+  return Boolean(filters.status || filters.type || filters.priority !== undefined);
+}
+
+function renderFilteredEmptyState(filters: BeadsFilters): string {
+  const clearFilters = hasDropdownFilters(filters)
+    ? ' <button type="button" class="beads-filters-clear">Clear filters</button>'
+    : "";
+
+  return `<div class="beads-empty-state"><p class="beads-empty-filter">${renderEmptyFilterMessage(filters)}${clearFilters}</p></div>`;
 }
 
 function renderFilterToolbar(filters: BeadsFilters): string {
@@ -200,13 +235,23 @@ export function renderBeadsListView(
     ? filtered
         .map((issue) => renderIssueListItem(issue, issue.id === visibleSelectedId))
         .join("")
-    : `<li class="beads-empty-filter">${renderEmptyFilterMessage(activeFilters)}</li>`;
+    : "";
 
   const detail = selected
     ? renderIssueDetail(selected, treeEntries)
     : `<div class="beads-detail-placeholder"><p>Select an issue to view details</p></div>`;
 
   const freshness = `<p class="beads-freshness">Loaded from <code>${escapeHtml(result.branch)}</code> · ${escapeHtml(formatDate(result.fetchedAt))}</p>`;
+
+  if (filtered.length === 0) {
+    return `<section class="beads-list-view">
+      ${freshness}
+      ${renderFilterToolbar(activeFilters)}
+      <div class="beads-layout beads-layout-empty">
+        ${renderFilteredEmptyState(activeFilters)}
+      </div>
+    </section>`;
+  }
 
   return `<section class="beads-list-view">
     ${freshness}
