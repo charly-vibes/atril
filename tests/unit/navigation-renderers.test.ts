@@ -112,6 +112,48 @@ describe("renderTreeSearchResults", () => {
     expect(html).toContain('class="tree-search-name">guide.md</span>');
     expect(html).toContain('class="tree-search-path">docs</span>');
   });
+
+  test("shows common parent dir once as section header when all items share the same dir", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: "openspec/specs/beads-viewer/spec.md", type: "blob", sha: "a1" },
+      { path: "openspec/specs/design-system/spec.md", type: "blob", sha: "a2" },
+      { path: "openspec/specs/platform/spec.md", type: "blob", sha: "a3" },
+      { path: "openspec/specs/spec-viewer/spec.md", type: "blob", sha: "a4" },
+    ];
+
+    const html = renderTreeSearchResults(entries);
+
+    // Common dir appears once as a header
+    const headerMatches = (html.match(/class="tree-search-section-header"/g) ?? []).length;
+    expect(headerMatches).toBe(1);
+    expect(html).toContain('>openspec/specs</');
+
+    // Individual items show only the capability name, not the repeated dir
+    expect(html).toContain('class="tree-search-name">beads-viewer</span>');
+    expect(html).toContain('class="tree-search-name">design-system</span>');
+    expect(html).toContain('class="tree-search-name">platform</span>');
+    expect(html).toContain('class="tree-search-name">spec-viewer</span>');
+
+    // The repeated dir must NOT appear inside individual item path spans
+    const pathSpanMatches = (html.match(/class="tree-search-path">openspec\/specs</g) ?? []).length;
+    expect(pathSpanMatches).toBe(0);
+  });
+
+  test("still shows per-item dir when items have different parent dirs", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: "openspec/specs/beads-viewer/spec.md", type: "blob", sha: "a1" },
+      { path: "openspec/changes/add-reader/specs/platform/spec.md", type: "blob", sha: "a2" },
+    ];
+
+    const html = renderTreeSearchResults(entries);
+
+    // No shared-dir header
+    expect(html).not.toContain('class="tree-search-section-header"');
+
+    // Each item still shows its own dir
+    expect(html).toContain('class="tree-search-path">openspec/specs</span>');
+    expect(html).toContain('class="tree-search-path">openspec/changes/add-reader/specs</span>');
+  });
 });
 
 describe("renderBreadcrumb", () => {

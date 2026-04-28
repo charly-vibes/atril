@@ -27,23 +27,44 @@ export function renderTreeLevel(nodes: TreeNode[]): string {
 }
 
 export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
-  return `<ul class="tree-search-results">${entries
-    .map((entry) => {
-      let name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
-      let dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+  const items = entries.map((entry) => {
+    let name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
+    let dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
 
-      if (name === "spec.md" && dir.includes("/specs/") && entry.path.startsWith("openspec/")) {
-        name = dir.slice(dir.lastIndexOf("/") + 1);
-        dir = dir.slice(0, dir.lastIndexOf("/"));
-      }
+    if (name === "spec.md" && dir.includes("/specs/") && entry.path.startsWith("openspec/")) {
+      name = dir.slice(dir.lastIndexOf("/") + 1);
+      dir = dir.slice(0, dir.lastIndexOf("/"));
+    }
 
-      return `<li>
-        <button type="button" class="tree-search-item" data-path="${escapeHtml(entry.path)}">
+    return { path: entry.path, name, dir };
+  });
+
+  const allSameDir = items.length > 1 && items.every((item) => item.dir === items[0]!.dir);
+
+  if (allSameDir) {
+    const commonDir = items[0]!.dir;
+    const listItems = items
+      .map(
+        ({ path, name }) => `<li>
+        <button type="button" class="tree-search-item" data-path="${escapeHtml(path)}">
           <span class="tree-search-name">${escapeHtml(name)}</span>
-          <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
+          <span class="tree-search-path"></span>
         </button>
-      </li>`;
-    })
+      </li>`,
+      )
+      .join("");
+    return `<ul class="tree-search-results"><li class="tree-search-section-header">${escapeHtml(commonDir)}</li>${listItems}</ul>`;
+  }
+
+  return `<ul class="tree-search-results">${items
+    .map(
+      ({ path, name, dir }) => `<li>
+      <button type="button" class="tree-search-item" data-path="${escapeHtml(path)}">
+        <span class="tree-search-name">${escapeHtml(name)}</span>
+        <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
+      </button>
+    </li>`,
+    )
     .join("")}</ul>`;
 }
 
