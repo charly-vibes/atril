@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   renderBreadcrumb,
+  renderFileActions,
   renderFileBreadcrumb,
   renderSourceBadges,
   renderSuggestionList,
@@ -34,8 +35,33 @@ describe("renderSourceBadges", () => {
       [],
     );
 
-    expect(html).toContain('<span class="source-badge" data-active="false">Specs</span>');
+    expect(html).toContain('<span class="source-badge" data-active="false" title="No specs found in this repository">Specs</span>');
     expect(html).not.toContain('type="button" class="source-badge"');
+  });
+
+  test("inactive badges have title attribute with 'No X found' message", () => {
+    const html = renderSourceBadges(
+      { openspec: false, beads: false, wai: false, docs: false, readme: false },
+      [],
+    );
+
+    expect(html).toContain('title="No specs found in this repository"');
+    expect(html).toContain('title="No issues found in this repository"');
+    expect(html).toContain('title="No memory found in this repository"');
+    expect(html).toContain('title="No docs found in this repository"');
+    expect(html).toContain('title="No README found in this repository"');
+  });
+
+  test("inactive badges render as span not button per source", () => {
+    const html = renderSourceBadges(
+      { openspec: false, beads: true, wai: false, docs: false, readme: false },
+      [{ label: "Issues", path: ".beads/issues.jsonl", kind: "beads" }],
+    );
+
+    // openspec is inactive — must be a span with title
+    expect(html).toContain('<span class="source-badge" data-active="false" title="No specs found in this repository">Specs</span>');
+    // beads is active — must be a button
+    expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="beads"');
   });
 });
 
@@ -119,5 +145,15 @@ describe("renderFileBreadcrumb", () => {
     );
 
     expect(html).not.toContain('class="canonical-spec-link"');
+  });
+});
+
+describe("renderFileActions", () => {
+  test("renders history and copy-link buttons for the file view", () => {
+    const html = renderFileActions();
+
+    expect(html).toContain('type="button" id="file-history"');
+    expect(html).toContain('type="button" class="copy-link-button" data-copy-scope="file"');
+    expect(html).toContain('aria-label="Copy link to current file"');
   });
 });

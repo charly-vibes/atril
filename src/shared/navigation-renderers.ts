@@ -77,6 +77,19 @@ export function renderFileBreadcrumb(path: string, entries: GitHubTreeEntry[]): 
   return `${breadcrumb}<span class="breadcrumb-meta-sep">·</span><button type="button" class="canonical-spec-link" data-path="${escapeHtml(canonicalSpecPath)}">View canonical spec</button>`;
 }
 
+export function renderFileActions(): string {
+  return `<button type="button" id="file-history">History</button>
+    <button type="button" class="copy-link-button" data-copy-scope="file" aria-label="Copy link to current file">🔗</button>`;
+}
+
+const inactiveBadgeTitles: Record<string, string> = {
+  openspec: "No specs found in this repository",
+  beads: "No issues found in this repository",
+  wai: "No memory found in this repository",
+  docs: "No docs found in this repository",
+  readme: "No README found in this repository",
+};
+
 export function renderSourceBadges(sources: KnowledgeSources, suggestions: EntryPoint[]): string {
   const sourceLabels: Array<[keyof KnowledgeSources, string]> = [
     ["openspec", "Specs"],
@@ -98,7 +111,8 @@ export function renderSourceBadges(sources: KnowledgeSources, suggestions: Entry
   return sourceLabels
     .map(([key, label]) => {
       if (!sources[key]) {
-        return `<span class="source-badge" data-active="false">${label}</span>`;
+        const title = inactiveBadgeTitles[key] ?? `No ${label.toLowerCase()} found in this repository`;
+        return `<span class="source-badge" data-active="false" title="${title}">${label}</span>`;
       }
 
       const route = routes.get(key);

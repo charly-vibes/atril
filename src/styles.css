@@ -233,6 +233,10 @@ button:hover {
   letter-spacing: 0.03em;
 }
 
+span.source-badge[data-active="false"] {
+  cursor: default;
+}
+
 button.source-badge[data-active="true"] {
   color: var(--color-muted);
   cursor: pointer;
