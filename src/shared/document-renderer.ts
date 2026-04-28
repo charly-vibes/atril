@@ -141,6 +141,33 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function buildToc(html: string): string {
+  const headingPattern = /<h([1-6])[^>]*\sid="([^"]+)"[^>]*>(.*?)<\/h[1-6]>/gi;
+  const headings: { level: number; id: string; text: string }[] = [];
+
+  let match;
+  while ((match = headingPattern.exec(html)) !== null) {
+    const level = parseInt(match[1]!, 10);
+    const id = match[2]!;
+    const text = match[3]!.replace(/<[^>]+>/g, "");
+    headings.push({ level, id, text });
+  }
+
+  if (headings.length < 3) return html;
+
+  const minLevel = Math.min(...headings.map((h) => h.level));
+  const items = headings
+    .map((h) => {
+      const indent = h.level - minLevel;
+      const indentAttr = indent > 0 ? ` class="toc-indent-${indent}"` : "";
+      return `<li${indentAttr}><a href="#${h.id}">${h.text}</a></li>`;
+    })
+    .join("");
+
+  const toc = `<nav class="doc-toc"><ol>${items}</ol></nav>`;
+  return html.replace(/<h[1-6][\s>]/, `${toc}$&`);
+}
+
 export function renderReadableDocument(path: string, content: string, entries: GitHubTreeEntry[] = []): string {
   if (path.endsWith(".md")) {
     if (path.includes("openspec/")) {
@@ -149,9 +176,9 @@ export function renderReadableDocument(path: string, content: string, entries: G
       const modifiedTokens = processOpenSpecTokens(tokens);
       // @ts-ignore - marked expects links object on tokens array
       modifiedTokens.links = tokens.links;
-      return marked.parser(modifiedTokens as any) as string;
+      return buildToc(marked.parser(modifiedTokens as any) as string);
     }
-    return marked.parse(content) as string;
+    return buildToc(marked.parse(content) as string);
   }
 
   if (path.endsWith(".org")) {

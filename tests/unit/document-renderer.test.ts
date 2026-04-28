@@ -112,4 +112,53 @@ describe("renderReadableDocument (OpenSpec add-unified-repo-reader:4.3)", () => 
     expect(openSpecHtml).not.toContain('<pre><code><a href="openspec/specs/cli-core/spec.md">cli-core</a>');
     expect(nonOpenSpecHtml).not.toContain('href="openspec/specs/cli-core/spec.md"');
   });
+
+  test("generates a TOC when a markdown document has 3 or more headings", () => {
+    const html = renderReadableDocument(
+      "docs/guide.md",
+      "## Overview\n\nIntro.\n\n## Setup\n\nInstall.\n\n## Usage\n\nRun it.",
+    );
+
+    expect(html).toContain('<nav class="doc-toc">');
+    expect(html).toContain('href="#overview"');
+    expect(html).toContain('href="#setup"');
+    expect(html).toContain('href="#usage"');
+  });
+
+  test("does not generate a TOC when a markdown document has fewer than 3 headings", () => {
+    const html = renderReadableDocument(
+      "docs/guide.md",
+      "## Overview\n\nIntro.\n\n## Setup\n\nInstall.",
+    );
+
+    expect(html).not.toContain('<nav class="doc-toc">');
+  });
+
+  test("TOC appears before the first heading in the rendered output", () => {
+    const html = renderReadableDocument(
+      "docs/guide.md",
+      "## Overview\n\nIntro.\n\n## Setup\n\nInstall.\n\n## Usage\n\nRun it.",
+    );
+
+    const tocPos = html.indexOf('<nav class="doc-toc">');
+    const firstHeadingPos = html.indexOf('<h2');
+    expect(tocPos).toBeGreaterThanOrEqual(0);
+    expect(tocPos).toBeLessThan(firstHeadingPos);
+  });
+
+  test("TOC indents deeper headings relative to the shallowest heading in the document", () => {
+    const html = renderReadableDocument(
+      "docs/guide.md",
+      "## Overview\n\nIntro.\n\n### Details\n\nMore.\n\n## Summary\n\nDone.\n\n### Conclusion\n\nFin.",
+    );
+
+    expect(html).toContain('<nav class="doc-toc">');
+    // h2 headings are top-level (no indent class)
+    expect(html).toContain('href="#overview"');
+    expect(html).toContain('href="#summary"');
+    // h3 headings are indented
+    expect(html).toContain('class="toc-indent-1"');
+    expect(html).toContain('href="#details"');
+    expect(html).toContain('href="#conclusion"');
+  });
 });
