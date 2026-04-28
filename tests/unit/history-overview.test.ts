@@ -75,7 +75,7 @@ describe("renderHistoryOverview", () => {
 });
 
 describe("path-aware navigation from history view", () => {
-  test("renders changed paths as navigable elements with data-path attributes", () => {
+  test("renders changed paths as semantic buttons with data-path attributes", () => {
     const html = renderHistoryOverview([
       {
         sha: "abc123456789",
@@ -86,7 +86,7 @@ describe("path-aware navigation from history view", () => {
       },
     ]);
 
-    expect(html).toContain('class="changed-path-link"');
+    expect(html).toContain('type="button" class="changed-path-link"');
     expect(html).toContain('data-path="src/main.ts"');
     expect(html).toContain('data-path="docs/guide.md"');
   });

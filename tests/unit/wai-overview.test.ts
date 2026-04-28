@@ -61,13 +61,14 @@ describe("buildWaiArtifactGroups", () => {
 });
 
 describe("renderWaiOverview", () => {
-  test("renders readable titles from filenames", () => {
+  test("renders readable titles from filenames inside semantic artifact buttons", () => {
     const groups = buildWaiArtifactGroups([
       entry(".wai/projects/atril/research/2026-04-20-implemented-link-resolver.md"),
     ]);
     const html = renderWaiOverview(groups);
 
     expect(html).toContain("Implemented link resolver");
+    expect(html).toContain('type="button" class="wai-artifact-link" data-path=".wai/projects/atril/research/2026-04-20-implemented-link-resolver.md"');
     expect(html).toContain('class="wai-artifact-name">Implemented link resolver</span>');
     expect(html).not.toContain('class="wai-artifact-name">2026');
   });

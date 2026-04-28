@@ -82,6 +82,7 @@ let currentTree: TreeResult | null = null;
 let currentBeads: BeadsLoadResult | null = null;
 let currentBeadsFilters: BeadsFilters = {};
 let currentBeadsSelectedId: string | undefined;
+let currentFilePath: string | undefined;
 let currentTarget: RouteTarget | undefined;
 let navDepth = 0;
 
@@ -312,6 +313,10 @@ function renderSearchResults(query: string) {
 
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
+  currentFilePath = path;
+  fileBreadcrumb.dataset.path = path;
+  fileHistory.dataset.path = path;
+  fileContent.dataset.path = path;
   startLoading("file", `Loading ${path}…`);
 
   fileBreadcrumb.innerHTML = renderFileBreadcrumb(path, currentTree?.entries ?? []);
@@ -542,15 +547,6 @@ document.addEventListener("click", (e) => {
 
 
 waiContent.addEventListener("click", (e) => {
-  const historyItem = (e.target as HTMLElement).closest(".wai-artifact-history") as HTMLElement | null;
-  if (historyItem) {
-    const path = historyItem.dataset.path;
-    if (path && currentContext) {
-      navigate(currentContext, { view: "history", path });
-    }
-    return;
-  }
-
   const item = (e.target as HTMLElement).closest(".wai-artifact-link") as HTMLElement | null;
   const path = item?.dataset.path;
   if (path && currentContext) {
@@ -566,7 +562,9 @@ fileContent.addEventListener("click", (e) => {
   const href = link.getAttribute("href");
   if (!href) return;
 
-  const currentPath = fileBreadcrumb.textContent ?? "";
+  const currentPath = currentFilePath ?? fileContent.dataset.path;
+  if (!currentPath) return;
+
   const resolved = resolveLink(href, currentPath, currentTree.entries);
 
   if (resolved.kind === "file") {
@@ -593,7 +591,7 @@ for (const el of [fileBreadcrumb, historyBreadcrumb]) {
 
 // File history button → path-specific history
 fileHistory.addEventListener("click", () => {
-  const path = fileBreadcrumb.textContent;
+  const path = currentFilePath ?? fileHistory.dataset.path;
   if (path && currentContext) {
     navigate(currentContext, { view: "history", path });
   }
