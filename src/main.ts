@@ -11,7 +11,7 @@ import { resolveIssueReferences, type IssueReference } from "./shared/issue-refe
 import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
 import { renderHistoryOverview } from "./shared/history-overview";
 import { buildWaiArtifactGroups, renderWaiOverview, renderLanguageEntry } from "./shared/wai-overview";
-import { listBoundedContexts, renderLanguageOverview, extractGlossaryTerms, renderGlossary } from "./views/language-explorer";
+import { listBoundedContexts, renderLanguageOverview, extractGlossaryTerms, renderGlossary, termToAnchor } from "./views/language-explorer";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
@@ -319,6 +319,7 @@ async function showLanguageView(contextName?: string, term?: string) {
   };
 
   if (!contextName) {
+    // No context requested — show the full bounded-context listing.
     await loadOverview();
     return;
   }
@@ -326,6 +327,7 @@ async function showLanguageView(contextName?: string, term?: string) {
   // Validate context exists
   const contextPath = contextPaths.find((p) => p.endsWith(`/contexts/${contextName}.md`));
   if (!contextPath) {
+    // Unknown context — fall back to overview with a not-found banner.
     await loadOverview(`Bounded context "${contextName}" not found.`);
     return;
   }
@@ -338,9 +340,10 @@ async function showLanguageView(contextName?: string, term?: string) {
     waiContent.innerHTML = renderGlossary(terms);
     showScreen("wai");
     if (term) {
-      // Scroll to term anchor after render
+      // Scroll to term anchor after render; normalise through termToAnchor so
+      // URL params like "Back Navigation" resolve to the slug "back-navigation".
       setTimeout(() => {
-        const el = document.getElementById(term);
+        const el = document.getElementById(termToAnchor(term));
         if (el) el.scrollIntoView();
       }, 0);
     }
@@ -579,6 +582,10 @@ function navigateOverviewItem(kind: string | undefined, path: string | undefined
   }
   if (kind === "wai") {
     navigate(currentContext, { view: "wai" });
+    return;
+  }
+  if (kind === "language") {
+    navigate(currentContext, { view: "wai", section: "language" });
     return;
   }
   if (kind === "docs") {

@@ -109,6 +109,7 @@ const inactiveBadgeTitles: Record<string, string> = {
   wai: "No memory found in this repository",
   docs: "No docs found in this repository",
   readme: "No README found in this repository",
+  language: "No language glossary found in this repository",
 };
 
 export function renderSourceBadges(sources: KnowledgeSources, suggestions: EntryPoint[]): string {
@@ -116,6 +117,7 @@ export function renderSourceBadges(sources: KnowledgeSources, suggestions: Entry
     ["openspec", "Specs"],
     ["beads", "Issues"],
     ["wai", "Memory"],
+    ["language", "Language"],
     ["docs", "Docs"],
     ["readme", "README"],
   ];

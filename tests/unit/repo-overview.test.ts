@@ -69,6 +69,24 @@ describe("detectKnowledgeSources", () => {
     expect(sources.wai).toBe(false);
     expect(sources.docs).toBe(false);
     expect(sources.readme).toBe(false);
+    expect(sources.language).toBe(false);
+  });
+
+  test("detects language when context .md files are present", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: ".wai/resources/ubiquitous-language/contexts/navigation.md", type: "blob", sha: "a1" },
+    ];
+    const sources = detectKnowledgeSources(entries);
+    expect(sources.language).toBe(true);
+  });
+
+  test("does not detect language from directory entries or non-context paths", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: ".wai/resources/ubiquitous-language/contexts", type: "tree", sha: "a1" },
+      { path: ".wai/resources/ubiquitous-language/README.md", type: "blob", sha: "a2" },
+    ];
+    const sources = detectKnowledgeSources(entries);
+    expect(sources.language).toBe(false);
   });
 });
 
@@ -81,6 +99,7 @@ describe("suggestEntryPoints", () => {
       wai: false,
       docs: false,
       readme: true,
+      language: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
     expect(suggestions).toEqual([
@@ -96,6 +115,7 @@ describe("suggestEntryPoints", () => {
       wai: false,
       docs: false,
       readme: false,
+      language: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
     expect(suggestions).toEqual([
@@ -111,6 +131,7 @@ describe("suggestEntryPoints", () => {
       wai: false,
       docs: false,
       readme: false,
+      language: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
     expect(suggestions).toEqual([
@@ -126,8 +147,27 @@ describe("suggestEntryPoints", () => {
       wai: false,
       docs: false,
       readme: false,
+      language: false,
     };
     const suggestions = suggestEntryPoints(sources, entries);
     expect(suggestions).toEqual([]);
+  });
+
+  test("suggests language when language contexts are present", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: ".wai/resources/ubiquitous-language/contexts/navigation.md", type: "blob", sha: "a1" },
+    ];
+    const sources: KnowledgeSources = {
+      openspec: false,
+      beads: false,
+      wai: false,
+      docs: false,
+      readme: false,
+      language: true,
+    };
+    const suggestions = suggestEntryPoints(sources, entries);
+    expect(suggestions).toEqual([
+      { label: "Language", path: ".wai/resources/ubiquitous-language/", kind: "language" },
+    ]);
   });
 });

@@ -24,7 +24,7 @@ describe("scenario: repository with all knowledge sources", () => {
 
   test("detects all sources", () => {
     const s = detectKnowledgeSources(entries);
-    expect(s).toEqual({ openspec: true, beads: true, wai: true, docs: true, readme: true });
+    expect(s).toEqual({ openspec: true, beads: true, wai: true, docs: true, readme: true, language: false });
   });
 
   test("suggests specs first and README last", () => {
@@ -37,6 +37,7 @@ describe("scenario: repository with all knowledge sources", () => {
       "docs",
       "readme",
     ]);
+    // language is absent from this repo (no context files)
   });
 });
 
@@ -69,7 +70,7 @@ describe("scenario: repository with no structured knowledge", () => {
 
   test("detects nothing", () => {
     const s = detectKnowledgeSources(entries);
-    expect(s).toEqual({ openspec: false, beads: false, wai: false, docs: false, readme: false });
+    expect(s).toEqual({ openspec: false, beads: false, wai: false, docs: false, readme: false, language: false });
   });
 
   test("suggests nothing", () => {

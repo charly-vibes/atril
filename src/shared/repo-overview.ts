@@ -6,12 +6,13 @@ export interface KnowledgeSources {
   wai: boolean;
   docs: boolean;
   readme: boolean;
+  language: boolean;
 }
 
 export interface EntryPoint {
   label: string;
   path: string;
-  kind: "openspec" | "beads" | "wai" | "docs" | "readme" | "tree";
+  kind: "openspec" | "beads" | "wai" | "docs" | "readme" | "tree" | "language";
 }
 
 const README_PATTERN = /^readme(\.\w+)?$/i;
@@ -22,6 +23,7 @@ export function detectKnowledgeSources(entries: GitHubTreeEntry[]): KnowledgeSou
   let wai = false;
   let docs = false;
   let readme = false;
+  let language = false;
 
   for (const entry of entries) {
     if (entry.path.startsWith("openspec/")) openspec = true;
@@ -29,9 +31,10 @@ export function detectKnowledgeSources(entries: GitHubTreeEntry[]): KnowledgeSou
     if (entry.path === ".wai" || entry.path.startsWith(".wai/")) wai = true;
     if (entry.path.startsWith("docs/")) docs = true;
     if (README_PATTERN.test(entry.path)) readme = true;
+    if (entry.type === "blob" && entry.path.startsWith(".wai/resources/ubiquitous-language/contexts/") && entry.path.endsWith(".md")) language = true;
   }
 
-  return { openspec, beads, wai, docs, readme };
+  return { openspec, beads, wai, docs, readme, language };
 }
 
 export function suggestEntryPoints(
@@ -72,6 +75,14 @@ export function suggestEntryPoints(
       label: "Documentation",
       path: "docs/",
       kind: "docs",
+    });
+  }
+
+  if (sources.language) {
+    suggestions.push({
+      label: "Language",
+      path: ".wai/resources/ubiquitous-language/",
+      kind: "language",
     });
   }
 

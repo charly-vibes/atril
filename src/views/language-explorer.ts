@@ -27,17 +27,28 @@ export function listBoundedContexts(
 }
 
 /**
- * Parse the Bounded Contexts table in the README.
- * Expects rows like: | name | [filename.md](...) | purpose |
- * Returns a Map from filename to purpose.
+ * Parse the Bounded Contexts section in the README.
+ * Supports two formats:
+ *   - Pipe table: | name | [filename.md](path) | purpose |
+ *   - Bullet list: - [Label](contexts/filename.md) — purpose
+ * Returns a Map from bare filename (e.g. "navigation.md") to purpose string.
  */
 function parsePurposeTable(content: string): Map<string, string> {
   const map = new Map<string, string>();
-  // Match pipe-table rows with 3 columns, skipping header and separator rows
-  const rowPattern = /^\|\s*[^|]+\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*([^|]+)\|/gm;
-  for (const match of content.matchAll(rowPattern)) {
+
+  // Pipe-table format: | any | [filename.md](path) | purpose |
+  const tablePattern = /^\|\s*[^|]+\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*([^|]+)\|/gm;
+  for (const match of content.matchAll(tablePattern)) {
+    map.set(match[1]!.trim(), match[2]!.trim());
+  }
+  if (map.size > 0) return map;
+
+  // Bullet-list format: - [Label](contexts/filename.md) — purpose
+  // Accepts em dash (—), en dash (–), or spaced hyphen ( - ) as separator
+  const bulletPattern = /^-\s+\[[^\]]*\]\([^)]*\/([^/)]+\.md)\)(?:\s+[—–-]\s+(.+))?/gm;
+  for (const match of content.matchAll(bulletPattern)) {
     const filename = match[1]!.trim();
-    const purpose = match[2]!.trim();
+    const purpose = (match[2] ?? "").trim();
     map.set(filename, purpose);
   }
   return map;
@@ -107,7 +118,7 @@ export function extractGlossaryTerms(content: string): GlossaryTerm[] {
     }
   }
 
-  if (headerIdx < 0) return [];
+  if (headerIdx < 0) return extractHeadingDefinitionTerms(content);
 
   const terms: GlossaryTerm[] = [];
   for (let i = headerIdx + 2; i < lines.length; i++) { // +2 to skip separator row
@@ -119,6 +130,28 @@ export function extractGlossaryTerms(content: string): GlossaryTerm[] {
     if (term) terms.push({ term, definition });
   }
 
+  return terms;
+}
+
+/**
+ * Fallback parser for heading-definition format:
+ *   ## Term Name
+ *   **Definition:** The definition text.
+ * Skips h1 headings and h2 sections that have no **Definition:** line.
+ */
+function extractHeadingDefinitionTerms(content: string): GlossaryTerm[] {
+  const terms: GlossaryTerm[] = [];
+  // Split on h2 boundaries (## ), ignoring h1 (# without second #)
+  const sections = content.split(/^(?=## )/m);
+  for (const section of sections) {
+    const headingMatch = section.match(/^## (.+)/);
+    if (!headingMatch) continue;
+    const term = headingMatch[1]!.trim();
+    const defMatch = section.match(/\*\*Definition:\*\*\s*(.+)/);
+    if (!defMatch) continue;
+    const definition = defMatch[1]!.trim();
+    terms.push({ term, definition });
+  }
   return terms;
 }
 

@@ -16,7 +16,7 @@ const mainTs = await Bun.file("src/main.ts").text();
 describe("renderSourceBadges", () => {
   test("renders active source badges as semantic buttons with navigation metadata", () => {
     const html = renderSourceBadges(
-      { openspec: true, beads: true, wai: true, docs: true, readme: true },
+      { openspec: true, beads: true, wai: true, docs: true, readme: true, language: false },
       [
         { label: "Specs", path: "openspec/specs/", kind: "tree" },
         { label: "Issues", path: ".beads/issues.jsonl", kind: "beads" },
@@ -33,7 +33,7 @@ describe("renderSourceBadges", () => {
 
   test("renders inactive source badges as non-interactive spans", () => {
     const html = renderSourceBadges(
-      { openspec: false, beads: false, wai: false, docs: false, readme: false },
+      { openspec: false, beads: false, wai: false, docs: false, readme: false, language: false },
       [],
     );
 
@@ -50,13 +50,14 @@ describe("renderSourceBadges", () => {
     expect(html).toContain('title="No specs found in this repository"');
     expect(html).toContain('title="No issues found in this repository"');
     expect(html).toContain('title="No memory found in this repository"');
+    expect(html).toContain('title="No language glossary found in this repository"');
     expect(html).toContain('title="No docs found in this repository"');
     expect(html).toContain('title="No README found in this repository"');
   });
 
   test("inactive badges render as span not button per source", () => {
     const html = renderSourceBadges(
-      { openspec: false, beads: true, wai: false, docs: false, readme: false },
+      { openspec: false, beads: true, wai: false, docs: false, readme: false, language: false },
       [{ label: "Issues", path: ".beads/issues.jsonl", kind: "beads" }],
     );
 
@@ -69,7 +70,7 @@ describe("renderSourceBadges", () => {
   // Task 5.1 — active SPECS pill is a clickable button when openspec is detected
   test("active SPECS pill is rendered as a button when openspec source is present", () => {
     const html = renderSourceBadges(
-      { openspec: true, beads: false, wai: false, docs: false, readme: false },
+      { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
       [{ label: "Specs", path: "openspec/specs/", kind: "tree" }],
     );
 
@@ -82,7 +83,7 @@ describe("renderSourceBadges", () => {
   // Task 5.2 — SPECS pill carries the routing metadata to navigate to the OpenSpec navigator
   test("active SPECS pill carries tree kind and openspec/specs/ path for navigator routing", () => {
     const html = renderSourceBadges(
-      { openspec: true, beads: false, wai: false, docs: false, readme: false },
+      { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
       [{ label: "Specs", path: "openspec/specs/", kind: "tree" }],
     );
 
@@ -95,7 +96,7 @@ describe("renderSourceBadges", () => {
   // Task 5.2 — falls back to openspec/changes/ when no canonical specs exist yet
   test("active SPECS pill uses openspec/changes/ path when only changes exist", () => {
     const html = renderSourceBadges(
-      { openspec: true, beads: false, wai: false, docs: false, readme: false },
+      { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
       [{ label: "Specs", path: "openspec/changes/", kind: "tree" }],
     );
 
@@ -106,7 +107,7 @@ describe("renderSourceBadges", () => {
   // Task 5.3 — inactive SPECS pill must not be a button (already verified above, explicit guard)
   test("inactive SPECS pill is a non-interactive span with no click affordance", () => {
     const html = renderSourceBadges(
-      { openspec: false, beads: false, wai: false, docs: false, readme: false },
+      { openspec: false, beads: false, wai: false, docs: false, readme: false, language: false },
       [],
     );
 
@@ -114,6 +115,26 @@ describe("renderSourceBadges", () => {
     expect(html).toContain(specsSpan);
     // Must not appear as a button at all
     expect(html).not.toContain('<button');
+  });
+
+  test("active Language badge is a button with kind=language", () => {
+    const html = renderSourceBadges(
+      { openspec: false, beads: false, wai: false, docs: false, readme: false, language: true },
+      [{ label: "Language", path: ".wai/resources/ubiquitous-language/", kind: "language" }],
+    );
+
+    expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="language" data-kind="language"');
+    expect(html).toContain('data-path=".wai/resources/ubiquitous-language/"');
+    expect(html).toContain('>Language<');
+  });
+
+  test("inactive Language badge is a span with title", () => {
+    const html = renderSourceBadges(
+      { openspec: false, beads: false, wai: false, docs: false, readme: false, language: false },
+      [],
+    );
+
+    expect(html).toContain('<span class="source-badge" data-active="false" title="No language glossary found in this repository">Language</span>');
   });
 });
 
