@@ -41,9 +41,12 @@ export function suggestEntryPoints(
   const suggestions: EntryPoint[] = [];
 
   if (sources.openspec) {
+    const hasCanonicalSpecs = entries.some(
+      (e) => e.type === "blob" && e.path.startsWith("openspec/specs/"),
+    );
     suggestions.push({
       label: "Specs",
-      path: "openspec/specs/",
+      path: hasCanonicalSpecs ? "openspec/specs/" : "openspec/changes/",
       kind: "tree",
     });
   }

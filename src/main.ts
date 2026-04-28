@@ -515,7 +515,7 @@ function navigateOverviewItem(kind: string | undefined, path: string | undefined
     return;
   }
   if (kind === "tree") {
-    navigate(currentContext, { view: "tree", search: path === "openspec/specs/" ? path : undefined });
+    navigate(currentContext, { view: "tree", search: (path === "openspec/specs/" || path === "openspec/changes/") ? path : undefined });
     return;
   }
   if (kind === "history") {
