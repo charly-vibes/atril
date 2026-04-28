@@ -107,14 +107,17 @@ export function fuzzyFilterEntries(
 
     const lowerPath = entry.path.toLowerCase();
 
+    const isDotDir = entry.path.startsWith(".");
+
     if (usePrefix) {
       if (lowerPath.startsWith(lowerQuery) || lowerPath.includes("/" + lowerQuery)) {
-        scored.push({ entry, score: lowerPath.startsWith(lowerQuery) ? 100 : 50 });
+        const baseScore = lowerPath.startsWith(lowerQuery) ? 100 : 50;
+        scored.push({ entry, score: isDotDir ? baseScore * 0.5 : baseScore });
       }
     } else {
       const score = fuzzyScore(lowerQuery, lowerPath);
       if (score > 0) {
-        scored.push({ entry, score });
+        scored.push({ entry, score: isDotDir ? score * 0.5 : score });
       }
     }
   }

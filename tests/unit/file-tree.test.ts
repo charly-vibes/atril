@@ -163,6 +163,45 @@ describe("fuzzyFilterEntries", () => {
     const results = fuzzyFilterEntries("s", entries, 2);
     expect(results).toHaveLength(2);
   });
+
+  test("dot-directory files rank below src files when both match equally", () => {
+    // Both paths contain "file" — .wai/ path should score lower
+    const mixed = [
+      blob(".wai/some/file.ts"),
+      blob("src/some/file.ts"),
+    ];
+    const results = fuzzyFilterEntries("file", mixed);
+    expect(results).toHaveLength(2);
+    // src/some/file.ts must come before .wai/some/file.ts
+    expect(results[0].path).toBe("src/some/file.ts");
+    expect(results[1].path).toBe(".wai/some/file.ts");
+  });
+
+  test("dot-directory files are still included in results (not excluded)", () => {
+    const mixed = [
+      blob(".wai/some/file.ts"),
+      blob(".beads/issues.jsonl"),
+      blob(".github/workflows/ci.yml"),
+      blob("src/main.ts"),
+    ];
+    const results = fuzzyFilterEntries("file", mixed);
+    // .wai/some/file.ts matches "file"; others may or may not
+    expect(results.some((e) => e.path === ".wai/some/file.ts")).toBe(true);
+  });
+
+  test("dot-directory penalty applies to all dot-directory prefixes", () => {
+    const mixed = [
+      blob(".beads/file-index.ts"),
+      blob(".github/workflows/file-upload.yml"),
+      blob("src/shared/file-tree.ts"),
+    ];
+    const results = fuzzyFilterEntries("file", mixed);
+    // src file should rank first
+    expect(results[0].path).toBe("src/shared/file-tree.ts");
+    // dot-directory files must still appear
+    expect(results.some((e) => e.path === ".beads/file-index.ts")).toBe(true);
+    expect(results.some((e) => e.path === ".github/workflows/file-upload.yml")).toBe(true);
+  });
 });
 
 describe("filterRelevantEntries", () => {
