@@ -10,7 +10,8 @@ import { resolveLink } from "./shared/link-resolver";
 import { resolveIssueReferences, type IssueReference } from "./shared/issue-reference";
 import { buildRoute, parseRoute, type RepoContext, type RouteTarget } from "./shared/router";
 import { renderHistoryOverview } from "./shared/history-overview";
-import { buildWaiArtifactGroups, renderWaiOverview } from "./shared/wai-overview";
+import { buildWaiArtifactGroups, renderWaiOverview, renderLanguageEntry } from "./shared/wai-overview";
+import { listBoundedContexts, renderLanguageOverview, extractGlossaryTerms, renderGlossary } from "./views/language-explorer";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
@@ -138,7 +139,7 @@ async function routeTo(target: RouteTarget) {
   } else if (target.view === "history") {
     await showHistoryView(target.path);
   } else if (target.view === "wai") {
-    showWaiView();
+    await showWaiView();
   } else if (target.view === "tree") {
     showTreeView(target.search);
   }
@@ -280,12 +281,74 @@ async function showHistoryView(path?: string) {
   }
 }
 
-function showWaiView() {
+async function showWaiView() {
   if (!currentContext || !currentTree) return;
 
+  const target = currentTarget;
+  if (target?.view === "wai" && target.section === "language") {
+    await showLanguageView(target.context, target.term);
+    return;
+  }
+
   waiBreadcrumb.textContent = "WAI / grouped artifacts";
-  waiContent.innerHTML = renderWaiOverview(buildWaiArtifactGroups(currentTree.entries));
+  const languageEntry = renderLanguageEntry(currentTree.entries);
+  waiContent.innerHTML = languageEntry + renderWaiOverview(buildWaiArtifactGroups(currentTree.entries));
   showScreen("wai");
+}
+
+async function showLanguageView(contextName?: string, term?: string) {
+  if (!currentContext || !currentTree) return;
+
+  const contextPaths = currentTree.entries
+    .filter((e) => e.type === "blob" && e.path.startsWith(".wai/resources/ubiquitous-language/contexts/") && e.path.endsWith(".md"))
+    .map((e) => e.path);
+
+  const loadOverview = async (notFoundMessage?: string) => {
+    const readmePath = ".wai/resources/ubiquitous-language/README.md";
+    let readmeContent = "";
+    try {
+      readmeContent = await client.getFileContent(currentContext!.owner, currentContext!.repo, currentContext!.branch, readmePath);
+    } catch {
+      // proceed with empty readme — listBoundedContexts will return names without purposes
+    }
+    const contexts = listBoundedContexts(readmeContent, contextPaths);
+    waiBreadcrumb.textContent = "WAI / Language";
+    const notFoundHtml = notFoundMessage ? `<p class="language-not-found">${escapeHtml(notFoundMessage)}</p>` : "";
+    waiContent.innerHTML = notFoundHtml + renderLanguageOverview(contexts);
+    showScreen("wai");
+  };
+
+  if (!contextName) {
+    await loadOverview();
+    return;
+  }
+
+  // Validate context exists
+  const contextPath = contextPaths.find((p) => p.endsWith(`/contexts/${contextName}.md`));
+  if (!contextPath) {
+    await loadOverview(`Bounded context "${contextName}" not found.`);
+    return;
+  }
+
+  // Show glossary view for the context
+  try {
+    const content = await client.getFileContent(currentContext.owner, currentContext.repo, currentContext.branch, contextPath);
+    const terms = extractGlossaryTerms(content);
+    waiBreadcrumb.textContent = `WAI / Language / ${escapeHtml(contextName)}`;
+    waiContent.innerHTML = renderGlossary(terms);
+    showScreen("wai");
+    if (term) {
+      // Scroll to term anchor after render
+      setTimeout(() => {
+        const el = document.getElementById(term);
+        if (el) el.scrollIntoView();
+      }, 0);
+    }
+  } catch {
+    waiBreadcrumb.textContent = "WAI / Language";
+    waiContent.innerHTML = `<p class="language-error">Could not load context "${escapeHtml(contextName)}".</p>`;
+    showScreen("wai");
+  }
 }
 
 function showTreeView(search?: string) {
@@ -555,7 +618,21 @@ document.addEventListener("click", (e) => {
 
 
 waiContent.addEventListener("click", (e) => {
-  const item = (e.target as HTMLElement).closest(".wai-artifact-link") as HTMLElement | null;
+  const target = e.target as HTMLElement;
+
+  const langBtn = target.closest(".wai-language-entry") as HTMLElement | null;
+  if (langBtn?.dataset.kind === "language" && currentContext) {
+    navigate(currentContext, { view: "wai", section: "language" });
+    return;
+  }
+
+  const ctxBtn = target.closest(".language-context-item") as HTMLElement | null;
+  if (ctxBtn?.dataset.context && currentContext) {
+    navigate(currentContext, { view: "wai", section: "language", context: ctxBtn.dataset.context });
+    return;
+  }
+
+  const item = target.closest(".wai-artifact-link") as HTMLElement | null;
   const path = item?.dataset.path;
   if (path && currentContext) {
     navigate(currentContext, { view: "file", path });
