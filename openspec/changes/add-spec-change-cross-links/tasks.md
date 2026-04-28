@@ -15,10 +15,10 @@
 - [ ] 3.3 Verify graceful fallback when the canonical spec does not exist (new capability being proposed)
 
 ## 4. Inline spec reference auto-linking
-- [ ] 4.1 Add failing test for auto-linking backtick-wrapped capability names in rendered OpenSpec documents
-- [ ] 4.2 Add failing test for auto-linking "See also:" pattern references
-- [ ] 4.3 Implement inline reference detection and linking in the document renderer for OpenSpec files
-- [ ] 4.4 Verify no false positives for partial name matches or non-OpenSpec documents
+- [x] 4.1 Add failing test for auto-linking backtick-wrapped capability names in rendered OpenSpec documents
+- [x] 4.2 Add failing test for auto-linking "See also:" pattern references
+- [x] 4.3 Implement inline reference detection and linking in the document renderer for OpenSpec files
+- [x] 4.4 Verify no false positives for partial name matches or non-OpenSpec documents
 
 ## 5. Tidy
 - [ ] 5.1 Tidy cross-link rendering and index-building abstractions after green tests
