@@ -23,7 +23,8 @@ export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: stri
   const items = commits
     .map((commit) => {
       const lines = commit.message.split("\n");
-      const title = lines[0] ?? "";
+      const rawTitle = lines[0] ?? "";
+      const title = rawTitle.length > 60 ? rawTitle.slice(0, 60) + "\u2026" : rawTitle;
       const body = lines.slice(1).join("\n").trim();
 
       const changedPaths = commit.changedPaths?.length
@@ -35,24 +36,25 @@ export function renderHistoryOverview(commits: CommitHistoryEntry[], path?: stri
 
       const hasDetails = body || changedPaths;
       const metaHtml = `<p class="history-meta"><span>${escapeHtml(commit.authorName)}</span> <span>${escapeHtml(formatDate(commit.authoredAt))}</span></p>`;
-      const detailsContent = `${metaHtml}${body ? `<pre class="history-body">${escapeHtml(body)}</pre>` : ""}${changedPaths}`;
+      const detailsContent = `${body ? `<pre class="history-body">${escapeHtml(body)}</pre>` : ""}${changedPaths}`;
       const shortSha = escapeHtml(commit.sha.slice(0, 7));
       const shaHtml = repoSlug
         ? `<a class="history-sha" href="https://github.com/${escapeHtml(repoSlug)}/commit/${escapeHtml(commit.sha)}" target="_blank" rel="noopener">${shortSha}</a>`
         : `<span class="history-sha">${shortSha}</span>`;
 
+      const summaryContent = `${shaHtml}
+              <span class="history-title">${escapeHtml(title)}</span>
+              ${metaHtml}`;
+
       return `
         <li class="history-item">
           ${hasDetails ? `<details>
             <summary class="history-summary">
-              ${shaHtml}
-              <span class="history-title">${escapeHtml(title)}</span>
+              ${summaryContent}
             </summary>
             ${detailsContent}
           </details>` : `<div class="history-summary">
-            ${shaHtml}
-            <span class="history-title">${escapeHtml(title)}</span>
-            ${metaHtml}
+            ${summaryContent}
           </div>`}
         </li>`;
     })

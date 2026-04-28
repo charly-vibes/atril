@@ -74,6 +74,87 @@ describe("renderHistoryOverview", () => {
   });
 });
 
+describe("inline author and date on every commit row", () => {
+  test("shows author and date inline for a commit with no body or changed paths", () => {
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: "Quick fix",
+        authorName: "Sasha",
+        authoredAt: "2026-04-20T12:00:00Z",
+      },
+    ]);
+
+    expect(html).toContain("Sasha");
+    expect(html).toContain("Apr 20");
+  });
+
+  test("shows author and date inline for a commit with body (inside <details>)", () => {
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: "Add feature\n\nThis is the detailed description.",
+        authorName: "Charly",
+        authoredAt: "2026-04-21T09:30:00Z",
+      },
+    ]);
+
+    // The <summary> row must contain author and date
+    const summaryMatch = html.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
+    expect(summaryMatch).not.toBeNull();
+    expect(summaryMatch![1]).toContain("Charly");
+    expect(summaryMatch![1]).toContain("Apr 21");
+  });
+
+  test("shows author and date inline for a commit with changed paths (inside <details>)", () => {
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: "Update docs",
+        authorName: "Sasha",
+        authoredAt: "2026-04-22T08:00:00Z",
+        changedPaths: ["src/main.ts"],
+      },
+    ]);
+
+    const summaryMatch = html.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
+    expect(summaryMatch).not.toBeNull();
+    expect(summaryMatch![1]).toContain("Sasha");
+    expect(summaryMatch![1]).toContain("Apr 22");
+  });
+
+  test("truncates title longer than 60 chars with ellipsis", () => {
+    const longTitle = "A".repeat(61);
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: longTitle,
+        authorName: "Sasha",
+        authoredAt: "2026-04-20T12:00:00Z",
+      },
+    ]);
+
+    const truncated = "A".repeat(60) + "\u2026";
+    expect(html).toContain(truncated);
+    expect(html).not.toContain(longTitle);
+  });
+
+  test("does not truncate title of exactly 60 chars", () => {
+    const exactTitle = "B".repeat(60);
+    const html = renderHistoryOverview([
+      {
+        sha: "abc123456789",
+        message: exactTitle,
+        authorName: "Sasha",
+        authoredAt: "2026-04-20T12:00:00Z",
+      },
+    ]);
+
+    expect(html).toContain(exactTitle);
+    expect(html).not.toContain(exactTitle + "\u2026");
+  });
+});
+
 describe("path-aware navigation from history view", () => {
   test("renders changed paths as semantic buttons with data-path attributes", () => {
     const html = renderHistoryOverview([
