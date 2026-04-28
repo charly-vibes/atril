@@ -16,6 +16,7 @@ import { escapeHtml } from "./shared/html-utils";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
   renderBreadcrumb,
+  renderFileActions,
   renderFileBreadcrumb,
   renderSourceBadges,
   renderSuggestionList,
@@ -45,11 +46,12 @@ const form = $("repo-form") as HTMLFormElement;
 const input = $("repo-input") as HTMLInputElement;
 const repoError = $("repo-error")!;
 const errorMessage = $("error-message")!;
+const errorHint = $("error-hint")!;
 const errorBack = $("error-back")!;
 const loadingMessage = $("loading-message")!;
 const fileBack = $("file-back")!;
 const fileBreadcrumb = $("file-breadcrumb")!;
-const fileHistory = $("file-history")!;
+const fileActions = $("file-actions")!;
 const fileContent = $("file-content")!;
 const beadsBack = $("beads-back")!;
 const beadsBreadcrumb = $("beads-breadcrumb")!;
@@ -78,6 +80,7 @@ const client = new GitHubClient();
 
 /** Current repo context, set after initial load. */
 let currentContext: RepoContext | null = null;
+let lastAttemptedRepo = "";
 let currentTree: TreeResult | null = null;
 let currentBeads: BeadsLoadResult | null = null;
 let currentBeadsFilters: BeadsFilters = {};
@@ -104,6 +107,15 @@ function startLoading(region: keyof typeof busyRegions, message: string) {
 
 function finishLoading(region: keyof typeof busyRegions, message?: string) {
   endAsyncUpdate(busyRegions[region], loadingMessage, message);
+}
+
+function showError(message: string, err?: unknown) {
+  errorMessage.textContent = message;
+  const isNotFound = err instanceof GitHubApiError && err.status === 404;
+  errorHint.textContent = isNotFound
+    ? "Check the owner/repo spelling and try again."
+    : "This may be a temporary GitHub API issue. Wait a moment and try again.";
+  showScreen("error");
 }
 
 function navigate(ctx: RepoContext, target: RouteTarget) {
@@ -212,9 +224,8 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
     finishLoading("beads", "Issues loaded.");
   } catch (err) {
     finishLoading("beads", "Failed to load issues.");
-    errorMessage.textContent =
-      err instanceof Error ? err.message : "Failed to load issues.";
-    showScreen("error");
+    const message = err instanceof Error ? err.message : "Failed to load issues.";
+    showError(message, err);
   }
 }
 
@@ -259,12 +270,8 @@ async function showHistoryView(path?: string) {
     finishLoading("history", "History loaded.");
   } catch (err) {
     finishLoading("history", "Failed to load history.");
-    if (err instanceof GitHubApiError) {
-      errorMessage.textContent = err.message;
-    } else {
-      errorMessage.textContent = "Failed to load history.";
-    }
-    showScreen("error");
+    const message = err instanceof GitHubApiError ? err.message : "Failed to load history.";
+    showError(message, err);
   }
 }
 
@@ -317,11 +324,11 @@ async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   currentFilePath = path;
   fileBreadcrumb.dataset.path = path;
-  fileHistory.dataset.path = path;
   fileContent.dataset.path = path;
   startLoading("file", `Loading ${path}…`);
 
   fileBreadcrumb.innerHTML = renderFileBreadcrumb(path, currentTree?.entries ?? []);
+  fileActions.innerHTML = renderFileActions();
 
   try {
     const content = await client.getFileContent(
@@ -340,12 +347,8 @@ async function showFileView(path: string, anchor?: string) {
     }
   } catch (err) {
     finishLoading("file", `Failed to load ${path}.`);
-    if (err instanceof GitHubApiError) {
-      errorMessage.textContent = err.message;
-    } else {
-      errorMessage.textContent = "Failed to load file.";
-    }
-    showScreen("error");
+    const message = err instanceof GitHubApiError ? err.message : "Failed to load file.";
+    showError(message, err);
   }
 }
 
@@ -354,6 +357,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
   header.innerHTML = `<h2>${escapeHtml(ref.owner)}/${escapeHtml(ref.repo)}</h2>
     <button type="button" class="branch-toggle" title="Change branch">
       <span class="branch-label">${escapeHtml(branch)}</span>
+      <span class="branch-chevron" aria-hidden="true">▾</span>
     </button>
     <form class="branch-form" hidden>
       <input type="text" class="branch-input" value="${escapeHtml(branch)}" autocomplete="off" />
@@ -383,6 +387,7 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
 }
 
 async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
+  lastAttemptedRepo = `${ref.owner}/${ref.repo}`;
   startLoading("overview", "Loading repository…");
 
   try {
@@ -405,12 +410,10 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
     navigate(currentContext, target);
   } catch (err) {
     finishLoading("overview", "Failed to load repository.");
-    if (err instanceof GitHubApiError) {
-      errorMessage.textContent = err.message;
-    } else {
-      errorMessage.textContent = "Failed to load repository. Check your connection.";
-    }
-    showScreen("error");
+    const message = err instanceof GitHubApiError
+      ? err.message
+      : "Failed to load repository. Check your connection.";
+    showError(message, err);
   }
 }
 
@@ -492,12 +495,10 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
     navigate(currentContext, { view: "overview" });
   } catch (err) {
     finishLoading("overview", `Failed to load branch ${branch}.`);
-    if (err instanceof GitHubApiError) {
-      errorMessage.textContent = `Branch "${branch}" not found or API error.`;
-    } else {
-      errorMessage.textContent = "Failed to switch branch.";
-    }
-    showScreen("error");
+    const message = err instanceof GitHubApiError
+      ? `Branch "${branch}" not found or API error.`
+      : "Failed to switch branch.";
+    showError(message, err);
   }
 }
 
@@ -592,10 +593,36 @@ for (const el of [fileBreadcrumb, historyBreadcrumb]) {
 }
 
 // File history button → path-specific history
-fileHistory.addEventListener("click", () => {
-  const path = currentFilePath ?? fileHistory.dataset.path;
-  if (path && currentContext) {
-    navigate(currentContext, { view: "history", path });
+function showCopiedState(button: HTMLButtonElement, originalLabel: string) {
+  button.textContent = "Copied!";
+  button.classList.add("copied");
+  window.setTimeout(() => {
+    button.textContent = originalLabel;
+    button.classList.remove("copied");
+  }, 1500);
+}
+
+async function copyCurrentUrl(button: HTMLButtonElement) {
+  const originalLabel = button.textContent ?? "🔗";
+  await navigator.clipboard.writeText(window.location.href);
+  showCopiedState(button, originalLabel);
+}
+
+fileActions.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+
+  const historyButton = target.closest("#file-history") as HTMLButtonElement | null;
+  if (historyButton) {
+    const path = currentFilePath;
+    if (path && currentContext) {
+      navigate(currentContext, { view: "history", path });
+    }
+    return;
+  }
+
+  const copyButton = target.closest('.copy-link-button[data-copy-scope="file"]') as HTMLButtonElement | null;
+  if (copyButton) {
+    void copyCurrentUrl(copyButton);
   }
 });
 
@@ -637,6 +664,21 @@ beadsContent.addEventListener("click", (e) => {
     rerenderBeadsList();
     const searchEl = beadsContent.querySelector(".beads-search") as HTMLInputElement | null;
     searchEl?.focus();
+    return;
+  }
+
+  const clearFilters = (e.target as HTMLElement).closest(".beads-filters-clear") as HTMLElement | null;
+  if (clearFilters) {
+    currentBeadsFilters.status = undefined;
+    currentBeadsFilters.type = undefined;
+    currentBeadsFilters.priority = undefined;
+    rerenderBeadsList();
+    return;
+  }
+
+  const copyButton = (e.target as HTMLElement).closest('.copy-link-button[data-copy-scope="issue"]') as HTMLButtonElement | null;
+  if (copyButton) {
+    void copyCurrentUrl(copyButton);
     return;
   }
 
@@ -717,8 +759,9 @@ for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack]) {
   });
 }
 
-// Error back → entry
+// Error back → entry (pre-fill the repo input with the last attempted slug)
 errorBack.addEventListener("click", () => {
+  if (lastAttemptedRepo) input.value = lastAttemptedRepo;
   showScreen("entry");
   input.focus();
 });

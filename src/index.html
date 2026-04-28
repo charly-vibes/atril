@@ -39,7 +39,7 @@
       <nav id="file-nav">
         <button id="file-back">← Back</button>
         <span id="file-breadcrumb"></span>
-        <button id="file-history">History</button>
+        <span id="file-actions"></span>
       </nav>
       <article id="file-content"></article>
     </div>
@@ -82,9 +82,10 @@
     <div id="loading-screen" class="screen" hidden role="status" aria-live="polite" aria-atomic="true">
       <p id="loading-message" class="loading">Loading repository…</p>
     </div>
-    <div id="error-screen" class="screen" hidden>
+    <div id="error-screen" class="screen" hidden role="alert">
       <p id="error-message" class="error"></p>
-      <button id="error-back">Back</button>
+      <p id="error-hint" class="error-hint"></p>
+      <button id="error-back">Try again</button>
     </div>
   </div>
 </body>

@@ -1304,3 +1304,9 @@ details[open] > .wai-summary::before {
 #error-screen .error {
   font-size: 1rem;
 }
+
+.error-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted, #888);
+  margin-top: 0.25rem;
+}
