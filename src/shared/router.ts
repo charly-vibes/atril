@@ -18,7 +18,7 @@ export type RouteTarget =
       missingDependencyId?: string;
     }
   | { view: "history"; path?: string }
-  | { view: "wai" }
+  | { view: "wai"; section?: "language"; context?: string; term?: string }
   | { view: "tree"; search?: string };
 
 /** A fully resolved route: context + target. */
@@ -67,6 +67,11 @@ export function buildRoute(
   }
   if (target.view === "tree") {
     if (target.search) params.set("search", target.search);
+  }
+  if (target.view === "wai") {
+    if (target.section) params.set("section", target.section);
+    if (target.context) params.set("context", target.context);
+    if (target.term) params.set("term", target.term);
   }
   return "?" + params.toString();
 }
@@ -132,6 +137,20 @@ export function parseRoute(params: URLSearchParams): Route | null {
   }
 
   if (view === "wai") {
+    const section = params.get("section");
+    if (section === "language") {
+      const context_ = params.get("context") ?? undefined;
+      const term = context_ ? (params.get("term") ?? undefined) : undefined;
+      return {
+        context,
+        target: {
+          view,
+          section,
+          ...(context_ ? { context: context_ } : {}),
+          ...(term ? { term } : {}),
+        },
+      };
+    }
     return { context, target: { view } };
   }
 
