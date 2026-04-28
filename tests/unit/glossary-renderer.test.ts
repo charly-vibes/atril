@@ -41,6 +41,11 @@ describe("termToAnchor", () => {
   test("collapses multiple spaces into single hyphen", () => {
     expect(termToAnchor("Term  With  Spaces")).toBe("term-with-spaces");
   });
+
+  test("strips non-alphanumeric punctuation from anchors", () => {
+    expect(termToAnchor("Read/Write")).toBe("read-write");
+    expect(termToAnchor("Artifact's Lock")).toBe("artifacts-lock");
+  });
 });
 
 describe("extractGlossaryTerms", () => {
@@ -77,6 +82,72 @@ describe("extractGlossaryTerms", () => {
   });
 });
 
+const HEADING_DEFINITION_CONTEXT = `# Artifacts Context
+
+## Artifact
+
+**Definition:** A dated Markdown file that captures reasoning at a specific point in time.
+
+**Anti-terms:** Do not use "document", "note", or "file"
+
+**Related:** Phase, Frontmatter
+
+---
+
+## Frontmatter
+
+**Definition:** YAML metadata at the top of an artifact file.
+
+**Anti-terms:** Do not call it "header" or "metadata block".
+
+**Related:** Artifact
+
+---
+
+## Artifact lock
+
+**Definition:** A SHA-256 hash sidecar written alongside an artifact to freeze its content.
+`;
+
+describe("extractGlossaryTerms — heading-definition format", () => {
+  test("extracts terms from ## Heading + **Definition:** blocks", () => {
+    const terms = extractGlossaryTerms(HEADING_DEFINITION_CONTEXT);
+    expect(terms).toHaveLength(3);
+    expect(terms[0]).toEqual({
+      term: "Artifact",
+      definition: "A dated Markdown file that captures reasoning at a specific point in time.",
+    });
+    expect(terms[1]).toEqual({
+      term: "Frontmatter",
+      definition: "YAML metadata at the top of an artifact file.",
+    });
+    expect(terms[2]).toEqual({
+      term: "Artifact lock",
+      definition: "A SHA-256 hash sidecar written alongside an artifact to freeze its content.",
+    });
+  });
+
+  test("ignores sections without a **Definition:** line", () => {
+    const md = `## Introduction\n\nSome prose, no definition.\n\n## Foo\n\n**Definition:** A real term.\n`;
+    const terms = extractGlossaryTerms(md);
+    expect(terms).toHaveLength(1);
+    expect(terms[0]!.term).toBe("Foo");
+  });
+
+  test("preserves trailing period in definition text", () => {
+    const md = `## Bar\n\n**Definition:** The bar concept.\n`;
+    const [term] = extractGlossaryTerms(md);
+    expect(term?.definition).toBe("The bar concept.");
+  });
+
+  test("skips top-level h1 heading", () => {
+    const md = `# Context Title\n\n## Foo\n\n**Definition:** A foo.\n`;
+    const terms = extractGlossaryTerms(md);
+    expect(terms).toHaveLength(1);
+    expect(terms[0]!.term).toBe("Foo");
+  });
+});
+
 describe("renderGlossary", () => {
   test("renders a <dl> with <dt>/<dd> pairs for each term", () => {
     const terms = extractGlossaryTerms(FIXTURE_CONTEXT);
@@ -108,6 +179,14 @@ describe("renderGlossary", () => {
     const html = renderGlossary(terms);
     expect(html).toContain("<dl");
   });
+
+  test("escapes HTML special characters in term and definition", () => {
+    const html = renderGlossary([{ term: "A < B", definition: "x & y" }]);
+    expect(html).not.toContain("<B>");
+    expect(html).not.toContain("x & y");
+    expect(html).toContain("&lt;");
+    expect(html).toContain("&amp;");
+  });
 });
 
 describe("glossary rendering: all bounded-context files", () => {
@@ -117,8 +196,8 @@ describe("glossary rendering: all bounded-context files", () => {
   );
   const contextFiles = readdirSync(contextsDir).filter((f) => f.endsWith(".md"));
 
-  test("at least one context file is present", () => {
-    expect(contextFiles.length).toBeGreaterThan(0);
+  test("at least 5 context files are present", () => {
+    expect(contextFiles.length).toBeGreaterThanOrEqual(5);
   });
 
   for (const filename of contextFiles) {

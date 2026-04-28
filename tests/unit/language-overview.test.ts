@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { listBoundedContexts, renderLanguageOverview } from "../../src/views/language-explorer";
-import type { GitHubTreeEntry } from "../../src/shared/github-api";
-
-function blob(path: string): GitHubTreeEntry {
-  return { path, type: "blob", sha: "abc" };
-}
 
 const FIXTURE_README = `# Ubiquitous Language
 
@@ -68,6 +63,66 @@ describe("listBoundedContexts", () => {
   });
 });
 
+const BULLET_README = `# Ubiquitous Language
+
+## Bounded Contexts
+
+- [Projects & Phases](contexts/projects.md) — PARA, projects, phases, lifecycle stages
+- [Artifacts](contexts/artifacts.md) — artifact types, locking, frontmatter, addenda
+- [Sessions](contexts/sessions.md) — sessions, handoffs, oracles, reflections
+`;
+
+const BULLET_CONTEXT_PATHS = [
+  ".wai/resources/ubiquitous-language/contexts/projects.md",
+  ".wai/resources/ubiquitous-language/contexts/artifacts.md",
+  ".wai/resources/ubiquitous-language/contexts/sessions.md",
+];
+
+describe("listBoundedContexts — bullet-list README format", () => {
+  test("returns one entry per context file with name, path, and purpose", () => {
+    const contexts = listBoundedContexts(BULLET_README, BULLET_CONTEXT_PATHS);
+    expect(contexts).toHaveLength(3);
+
+    expect(contexts[0]).toEqual({
+      name: "projects",
+      path: ".wai/resources/ubiquitous-language/contexts/projects.md",
+      purpose: "PARA, projects, phases, lifecycle stages",
+    });
+
+    expect(contexts[1]).toEqual({
+      name: "artifacts",
+      path: ".wai/resources/ubiquitous-language/contexts/artifacts.md",
+      purpose: "artifact types, locking, frontmatter, addenda",
+    });
+
+    expect(contexts[2]).toEqual({
+      name: "sessions",
+      path: ".wai/resources/ubiquitous-language/contexts/sessions.md",
+      purpose: "sessions, handoffs, oracles, reflections",
+    });
+  });
+
+  test("uses em dash, en dash, or hyphen-dash as the separator", () => {
+    const variants = [
+      "- [Foo](contexts/foo.md) — em dash purpose",
+      "- [Foo](contexts/foo.md) – en dash purpose",
+      "- [Foo](contexts/foo.md) - hyphen purpose",
+    ];
+    for (const line of variants) {
+      const paths = [".wai/resources/ubiquitous-language/contexts/foo.md"];
+      const [ctx] = listBoundedContexts(line, paths);
+      expect(ctx?.purpose).toMatch(/purpose/);
+    }
+  });
+
+  test("returns empty purpose when no separator is present", () => {
+    const readme = "- [Foo](contexts/foo.md)";
+    const paths = [".wai/resources/ubiquitous-language/contexts/foo.md"];
+    const [ctx] = listBoundedContexts(readme, paths);
+    expect(ctx?.purpose).toBe("");
+  });
+});
+
 describe("renderLanguageOverview", () => {
   test("renders a list of bounded contexts with names and purposes", () => {
     const contexts = [
@@ -86,5 +141,14 @@ describe("renderLanguageOverview", () => {
   test("renders empty state when no bounded contexts", () => {
     const html = renderLanguageOverview([]);
     expect(html).toContain("No bounded contexts defined");
+  });
+
+  test("escapes HTML special characters in context name and purpose", () => {
+    const html = renderLanguageOverview([
+      { name: 'nav&auth', path: "...", purpose: "<script>alert(1)</script>" },
+    ]);
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&amp;");
+    expect(html).toContain("&lt;");
   });
 });

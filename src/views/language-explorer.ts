@@ -87,10 +87,12 @@ export interface GlossaryTerm {
  */
 export function termToAnchor(term: string): string {
   return term
-    .replace(/\*\*/g, "")
+    .replace(/\*\*/g, "")          // strip bold markers
+    .replace(/['\u2019]/g, "")     // strip apostrophes (avoid "artifact-s")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-");
+    .replace(/[^a-z0-9]+/g, "-")  // replace non-alphanumeric runs with hyphen
+    .replace(/^-|-$/g, "");       // trim leading/trailing hyphens
 }
 
 /**
