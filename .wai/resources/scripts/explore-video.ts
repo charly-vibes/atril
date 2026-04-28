@@ -266,6 +266,78 @@ async function main() {
     await sleep(600);
   }
 
+  // ── Language Explorer: WAI view entry ────────────────────────────────────
+  console.log("Language Explorer: WAI view entry point");
+  await page.goto(`${BASE}/?${QUERY}&view=wai`);
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "wai-overview.png") });
+
+  // Find and click the language entry button
+  const langEntryBtn = page.locator(".wai-language-entry").first();
+  if (await langEntryBtn.isVisible()) {
+    await langEntryBtn.hover();
+    await sleep(600);
+    await langEntryBtn.click();
+    await page.waitForURL(`**section=language**`, { timeout: 8000 });
+    await sleep(1500);
+    await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-overview.png") });
+    console.log("  Language overview loaded");
+
+    // Click the first bounded context item
+    const ctxItem = page.locator(".language-context-item").first();
+    if (await ctxItem.isVisible()) {
+      const ctxName = await ctxItem.locator(".language-context-name").textContent();
+      console.log(`  Clicking context: ${ctxName}`);
+      await ctxItem.hover();
+      await sleep(600);
+      await ctxItem.click();
+      await page.waitForURL(`**context=**`, { timeout: 8000 });
+      await sleep(1500);
+      await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-glossary.png") });
+      // Scroll through the glossary
+      await page.mouse.wheel(0, 400);
+      await sleep(600);
+      await page.mouse.wheel(0, 400);
+      await sleep(600);
+      await page.mouse.wheel(0, -800);
+      await sleep(500);
+    }
+  } else {
+    console.log("  Language entry button not found — skipping deep navigation");
+  }
+
+  // ── Language Explorer: deep-link to language overview ────────────────────
+  console.log("Language Explorer: deep-link to language overview");
+  await page.goto(`${BASE}/?${QUERY}&view=wai&section=language`);
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-deep-link.png") });
+
+  // ── Language Explorer: deep-link to specific context ─────────────────────
+  console.log("Language Explorer: deep-link to navigation context");
+  await page.goto(`${BASE}/?${QUERY}&view=wai&section=language&context=navigation`);
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-context-navigation.png") });
+  // Scroll to verify glossary renders
+  await page.mouse.wheel(0, 600);
+  await sleep(800);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-context-navigation-scrolled.png") });
+  await page.mouse.wheel(0, -600);
+  await sleep(400);
+
+  // ── Language Explorer: deep-link with term anchor ─────────────────────────
+  console.log("Language Explorer: deep-link with term anchor");
+  await page.goto(`${BASE}/?${QUERY}&view=wai&section=language&context=navigation&term=Back+Navigation`);
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-term-anchor.png") });
+
+  // ── Language Explorer: invalid context (not-found fallback) ───────────────
+  console.log("Language Explorer: invalid context → not-found banner");
+  await page.goto(`${BASE}/?${QUERY}&view=wai&section=language&context=doesnotexist`);
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "language-not-found.png") });
+  const notFoundMsg = await page.locator(".language-not-found").first().textContent().catch(() => "");
+  console.log(`  Not-found message: "${notFoundMsg}"`);
+
   // ── S25/S26: History view ─────────────────────────────────────────────────
   console.log("S25: History readability");
   await page.goto(`${BASE}/?${QUERY}&view=history`);
