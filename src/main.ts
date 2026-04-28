@@ -631,6 +631,15 @@ beadsContent.addEventListener("input", (e) => {
 beadsContent.addEventListener("click", (e) => {
   if (!currentContext) return;
 
+  const clearSearch = (e.target as HTMLElement).closest(".beads-search-clear") as HTMLElement | null;
+  if (clearSearch) {
+    currentBeadsFilters.search = undefined;
+    rerenderBeadsList();
+    const searchEl = beadsContent.querySelector(".beads-search") as HTMLInputElement | null;
+    searchEl?.focus();
+    return;
+  }
+
   // Issue list item → select issue in list mode
   const listItem = (e.target as HTMLElement).closest(".beads-list-item") as HTMLElement | null;
   if (listItem) {

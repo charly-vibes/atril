@@ -122,6 +122,13 @@ export function filterIssues(issues: BeadsIssue[], filters: BeadsFilters): Beads
   });
 }
 
+function renderEmptyFilterMessage(filters: BeadsFilters): string {
+  if (filters.search) {
+    return `No issues matching "${escapeHtml(filters.search)}"`;
+  }
+  return "No issues match the current filters";
+}
+
 function renderFilterToolbar(filters: BeadsFilters): string {
   const statusOptions = ["", "open", "in_progress", "closed"];
   const typeOptions = ["", "task", "bug", "feature", "epic"];
@@ -142,7 +149,11 @@ function renderFilterToolbar(filters: BeadsFilters): string {
     }).join("")}
   </select>`;
 
-  const searchInput = `<input class="beads-search" type="text" placeholder="Search issues…" value="${escapeHtml(filters.search ?? "")}" />`;
+  const searchValue = escapeHtml(filters.search ?? "");
+  const clearButton = filters.search
+    ? `<button type="button" class="beads-search-clear" aria-label="Clear issue search">×</button>`
+    : "";
+  const searchInput = `<div class="beads-search-wrap"><input class="beads-search" type="text" placeholder="Search issues…" value="${searchValue}" />${clearButton}</div>`;
 
   return `<div class="beads-toolbar">
     ${searchInput}
@@ -189,7 +200,7 @@ export function renderBeadsListView(
     ? filtered
         .map((issue) => renderIssueListItem(issue, issue.id === visibleSelectedId))
         .join("")
-    : `<li class="beads-empty-filter">No issues match the current filters</li>`;
+    : `<li class="beads-empty-filter">${renderEmptyFilterMessage(activeFilters)}</li>`;
 
   const detail = selected
     ? renderIssueDetail(selected, treeEntries)

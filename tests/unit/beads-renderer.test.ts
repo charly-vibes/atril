@@ -166,6 +166,16 @@ describe("renderBeadsListView", () => {
     expect(html).toContain("beads-filter");
   });
 
+  test("shows a clear-search button only when the search has a value", () => {
+    const result = makeResult([makeIssue()]);
+    const withSearch = renderBeadsListView(result, undefined, { search: "login" });
+    const withoutSearch = renderBeadsListView(result);
+
+    expect(withSearch).toContain('class="beads-search-clear"');
+    expect(withSearch).toContain('aria-label="Clear issue search"');
+    expect(withoutSearch).not.toContain('class="beads-search-clear"');
+  });
+
   test("filters list when filters provided", () => {
     const result = makeResult([
       makeIssue({ id: "a-1", status: "open", title: "Open task" }),
@@ -186,6 +196,14 @@ describe("renderBeadsListView", () => {
     expect(html).not.toContain('class="beads-list-item selected" data-issue-id="a-2"');
     expect(html).toContain("Open detail");
     expect(html).not.toContain("Closed detail");
+  });
+
+  test("shows the search term in the empty state when search has no matches", () => {
+    const result = makeResult([
+      makeIssue({ id: "a-1", status: "open", title: "Login issue" }),
+    ]);
+    const html = renderBeadsListView(result, undefined, { search: "xyznonexistent" });
+    expect(html).toContain('No issues matching "xyznonexistent"');
   });
 
   test("shows empty filter message when no issues match filters", () => {
