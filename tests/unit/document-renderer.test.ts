@@ -48,15 +48,15 @@ describe("renderReadableDocument (OpenSpec add-unified-repo-reader:4.3)", () => 
     expect(html).toContain("&lt;unsafe&gt;");
   });
 
-  test("renders OpenSpec requirements and scenarios with collapsible classes", () => {
+  test("renders OpenSpec requirements and scenarios expanded by default", () => {
     const html = renderReadableDocument(
       "openspec/specs/spec-viewer/spec.md",
       "### Requirement: Rendering\n\nText.\n\n#### Scenario: Basic view\n\nMore.",
     );
 
-    expect(html).toContain('class="openspec-details openspec-details-requirement"');
+    expect(html).toContain('<details open class="openspec-details openspec-details-requirement">');
     expect(html).toContain('class="openspec-heading openspec-heading-requirement"');
-    expect(html).toContain('class="openspec-details openspec-details-scenario"');
+    expect(html).toContain('<details open class="openspec-details openspec-details-scenario">');
     expect(html).toContain('class="openspec-heading openspec-heading-scenario"');
     expect(html).toContain('>Rendering</h3>');
     expect(html).not.toContain('>Requirement: Rendering</h3>');

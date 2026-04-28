@@ -46,7 +46,7 @@ function processOpenSpecTokens(tokens: Token[]): Token[] {
       const kind = token.text.startsWith("Scenario:") ? "scenario" : "requirement";
       const headingText = displayOpenSpecHeading(token.text);
       const headingHtml = `<h${token.depth} id="${escapeHtml(id)}" class="openspec-heading openspec-heading-${kind}">${escapeHtml(headingText)}</h${token.depth}>`;
-      const htmlStart = `<details class="openspec-details openspec-details-${kind}"><summary class="openspec-summary">${headingHtml}</summary>\n`;
+      const htmlStart = `<details open class="openspec-details openspec-details-${kind}"><summary class="openspec-summary">${headingHtml}</summary>\n`;
       result.push({ type: "html", raw: htmlStart, text: htmlStart } as Tokens.HTML);
       
       stack.push({ depth: token.depth });
