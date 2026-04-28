@@ -1,5 +1,6 @@
 import type { GitHubTreeEntry } from "./github-api";
 import { escapeHtml } from "./html-utils";
+import { hasUbiquitousLanguage } from "./file-tree";
 
 export interface WaiArtifactGroup {
   id: string;
@@ -224,6 +225,11 @@ function renderGroup(group: WaiArtifactGroup, headingLevel: "h3" | "h4" | "h5"):
       ${renderArtifactList(group.paths)}
       ${childHtml}
     </details>`;
+}
+
+export function renderLanguageEntry(entries: GitHubTreeEntry[]): string {
+  if (!hasUbiquitousLanguage(entries)) return "";
+  return `<button type="button" class="wai-language-entry" data-kind="language">Language</button>`;
 }
 
 export function renderWaiOverview(groups: WaiArtifactGroup[]): string {

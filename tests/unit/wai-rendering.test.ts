@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { renderWaiOverview } from "../../src/shared/wai-overview";
+import { renderWaiOverview, renderLanguageEntry } from "../../src/shared/wai-overview";
+import type { GitHubTreeEntry } from "../../src/shared/github-api";
+
+function blob(path: string): GitHubTreeEntry {
+  return { path, type: "blob", sha: "abc" };
+}
+
+function dir(path: string): GitHubTreeEntry {
+  return { path, type: "tree", sha: "abc" };
+}
 
 describe("renderWaiOverview", () => {
   test("renders PARA sections with nested project groups", () => {
@@ -45,5 +54,29 @@ describe("renderWaiOverview", () => {
   test("renders an empty state when no artifacts", () => {
     const html = renderWaiOverview([]);
     expect(html).toContain("No WAI artifacts available");
+  });
+});
+
+describe("renderLanguageEntry", () => {
+  test("returns a Language button when index file is present", () => {
+    const entries: GitHubTreeEntry[] = [
+      dir(".wai/resources/ubiquitous-language"),
+      blob(".wai/resources/ubiquitous-language/README.md"),
+    ];
+    const html = renderLanguageEntry(entries);
+    expect(html).toContain("Language");
+    expect(html).toContain('data-kind="language"');
+  });
+
+  test("returns empty string when index file is absent", () => {
+    const entries: GitHubTreeEntry[] = [
+      dir(".wai/resources"),
+      blob(".wai/resources/reflections/testing.md"),
+    ];
+    expect(renderLanguageEntry(entries)).toBe("");
+  });
+
+  test("returns empty string for an empty tree", () => {
+    expect(renderLanguageEntry([])).toBe("");
   });
 });
