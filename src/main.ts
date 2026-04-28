@@ -234,9 +234,14 @@ function rerenderBeadsList() {
   const activeEl = document.activeElement as HTMLElement | null;
   const wasSearch = activeEl?.classList.contains("beads-search");
   const cursorPos = wasSearch ? (activeEl as HTMLInputElement).selectionStart : null;
+  const panelWasOpen = beadsContent.querySelector(".beads-filter-panel")?.classList.contains("is-open") ?? false;
 
   currentBeadsSelectedId = resolveVisibleSelectedIssueId(currentBeads, currentBeadsSelectedId, currentBeadsFilters);
   beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
+
+  if (panelWasOpen) {
+    beadsContent.querySelector(".beads-filter-panel")?.classList.add("is-open");
+  }
 
   if (wasSearch) {
     const searchEl = beadsContent.querySelector(".beads-search") as HTMLInputElement | null;
@@ -657,6 +662,13 @@ beadsContent.addEventListener("input", (e) => {
 // Beads view click delegation
 beadsContent.addEventListener("click", (e) => {
   if (!currentContext) return;
+
+  const filterToggle = (e.target as HTMLElement).closest("#beads-filter-toggle") as HTMLElement | null;
+  if (filterToggle) {
+    const panel = beadsContent.querySelector(".beads-filter-panel") as HTMLElement | null;
+    panel?.classList.toggle("is-open");
+    return;
+  }
 
   const clearSearch = (e.target as HTMLElement).closest(".beads-search-clear") as HTMLElement | null;
   if (clearSearch) {

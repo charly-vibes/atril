@@ -969,6 +969,41 @@ button.source-badge[data-active="true"]:hover {
   }
 }
 
+/* Mobile filter toggle — hide panel, show button on narrow viewports */
+#beads-filter-toggle {
+  display: none;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.beads-filter-panel {
+  display: contents;
+}
+
+@media (max-width: 480px) {
+  #beads-filter-toggle {
+    display: block;
+  }
+
+  .beads-filter-panel {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .beads-filter-panel.is-open {
+    display: flex;
+  }
+}
+
 .history-list {
   display: flex;
   flex-direction: column;

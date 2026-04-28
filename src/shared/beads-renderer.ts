@@ -190,11 +190,17 @@ function renderFilterToolbar(filters: BeadsFilters): string {
     : "";
   const searchInput = `<div class="beads-search-wrap"><input class="beads-search" type="text" placeholder="Search issues…" value="${searchValue}" />${clearButton}</div>`;
 
+  const toggleLabel = hasDropdownFilters(filters) ? "Filter ● ▾" : "Filter ▾";
+  const toggleButton = `<button type="button" id="beads-filter-toggle">${toggleLabel}</button>`;
+
   return `<div class="beads-toolbar">
     ${searchInput}
-    ${statusSelect}
-    ${typeSelect}
-    ${prioritySelect}
+    ${toggleButton}
+    <div class="beads-filter-panel">
+      ${statusSelect}
+      ${typeSelect}
+      ${prioritySelect}
+    </div>
   </div>`;
 }
 

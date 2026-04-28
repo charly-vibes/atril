@@ -180,6 +180,49 @@ describe("renderBeadsListView", () => {
     expect(html).toContain("beads-filter");
   });
 
+  test("toolbar contains a filter toggle button", () => {
+    const result = makeResult([makeIssue()]);
+    const html = renderBeadsListView(result);
+    expect(html).toContain('id="beads-filter-toggle"');
+    expect(html).toContain("Filter");
+  });
+
+  test("filter toggle button shows filled-dot badge when any dropdown filter is active", () => {
+    const result = makeResult([makeIssue()]);
+    const withStatus = renderBeadsListView(result, undefined, { status: "open" });
+    const withType = renderBeadsListView(result, undefined, { type: "bug" });
+    const withPriority = renderBeadsListView(result, undefined, { priority: 1 });
+    const withNone = renderBeadsListView(result);
+
+    expect(withStatus).toContain("Filter ● ▾");
+    expect(withType).toContain("Filter ● ▾");
+    expect(withPriority).toContain("Filter ● ▾");
+    expect(withNone).not.toContain("Filter ● ▾");
+    expect(withNone).toContain("Filter ▾");
+  });
+
+  test("the three filter dropdowns are wrapped in a beads-filter-panel", () => {
+    const result = makeResult([makeIssue()]);
+    const html = renderBeadsListView(result);
+    expect(html).toContain('class="beads-filter-panel"');
+    // All three selects must be inside the panel
+    const panelStart = html.indexOf('class="beads-filter-panel"');
+    const panelEnd = html.indexOf("</div>", panelStart);
+    const panel = html.slice(panelStart, panelEnd);
+    expect(panel).toContain('data-filter="status"');
+    expect(panel).toContain('data-filter="type"');
+    expect(panel).toContain('data-filter="priority"');
+  });
+
+  test("search input is outside the beads-filter-panel", () => {
+    const result = makeResult([makeIssue()]);
+    const html = renderBeadsListView(result);
+    const panelStart = html.indexOf('class="beads-filter-panel"');
+    const searchPos = html.indexOf('class="beads-search"');
+    expect(searchPos).toBeGreaterThan(-1);
+    expect(searchPos).toBeLessThan(panelStart);
+  });
+
   test("shows a clear-search button only when the search has a value", () => {
     const result = makeResult([makeIssue()]);
     const withSearch = renderBeadsListView(result, undefined, { search: "login" });
@@ -242,6 +285,19 @@ describe("beads keyboard accessibility", () => {
     expect(styles).toContain(".beads-list-item:focus-visible");
     expect(styles).toContain(".beads-dep-link:focus-visible");
     expect(styles).toContain(".issue-ref-link:focus-visible");
+  });
+});
+
+describe("beads mobile filter toggle (CSS)", () => {
+  test("hides the filter panel and shows the toggle button on narrow viewports", () => {
+    expect(styles).toContain("#beads-filter-toggle");
+    // On narrow viewports the panel is hidden and the button is shown
+    expect(styles).toMatch(/max-width:\s*480px/);
+  });
+
+  test("hides the toggle button and always shows the panel on wide viewports", () => {
+    // On wide viewports the toggle button is hidden (display:none)
+    expect(styles).toContain(".beads-filter-panel");
   });
 });
 
