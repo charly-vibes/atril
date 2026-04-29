@@ -796,7 +796,9 @@ $("specs-actions")!.addEventListener("click", (e) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${currentContext.repo}-specs.md`;
+    const date = new Date().toISOString().slice(0, 10);
+    const sha = (currentTree?.commitSha ?? "").slice(0, 7);
+    a.download = `${date}-${currentContext.repo}-${sha}-specs.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

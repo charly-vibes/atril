@@ -10,6 +10,7 @@ export interface GitHubTreeEntry {
 export interface TreeResult {
   entries: GitHubTreeEntry[];
   truncated: boolean;
+  commitSha: string;
 }
 
 export interface CommitHistoryEntry {
@@ -48,10 +49,15 @@ export class GitHubClient {
     const key = `tree:${owner}/${repo}:${ref}`;
     if (this.cache.has(key)) return this.cache.get(key) as TreeResult;
 
-    const data = await this.apiFetch<{ tree: GitHubTreeEntry[]; truncated: boolean }>(
-      `${API_BASE}/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`,
-    );
-    const result: TreeResult = { entries: data.tree, truncated: data.truncated };
+    const [treeData, commitData] = await Promise.all([
+      this.apiFetch<{ tree: GitHubTreeEntry[]; truncated: boolean }>(
+        `${API_BASE}/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`,
+      ),
+      this.apiFetch<{ sha: string }>(
+        `${API_BASE}/repos/${owner}/${repo}/commits/${ref}`,
+      ),
+    ]);
+    const result: TreeResult = { entries: treeData.tree, truncated: treeData.truncated, commitSha: commitData.sha };
     this.cache.set(key, result);
     return result;
   }
