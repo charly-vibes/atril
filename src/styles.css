@@ -344,7 +344,8 @@ button.source-badge[data-active="true"]:hover {
 #file-nav,
 #beads-nav,
 #history-nav,
-#wai-nav {
+#wai-nav,
+#specs-nav {
   position: sticky;
   top: 0;
   z-index: 10;
@@ -360,7 +361,8 @@ button.source-badge[data-active="true"]:hover {
 #file-breadcrumb,
 #beads-breadcrumb,
 #history-breadcrumb,
-#wai-breadcrumb {
+#wai-breadcrumb,
+#specs-breadcrumb {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--color-muted);
@@ -373,7 +375,8 @@ button.source-badge[data-active="true"]:hover {
   text-align: left;
 }
 
-#file-actions {
+#file-actions,
+#specs-actions {
   display: inline-flex;
   gap: 0.5rem;
   flex-shrink: 0;
@@ -430,7 +433,8 @@ button.source-badge[data-active="true"]:hover {
 #file-nav button,
 #beads-nav button,
 #history-nav button,
-#wai-nav button {
+#wai-nav button,
+#specs-nav button {
   flex-shrink: 0;
   font-size: 0.8rem;
   padding: 0.3rem 0.6rem;
@@ -462,7 +466,8 @@ button.source-badge[data-active="true"]:hover {
 #file-content,
 #beads-content,
 #history-content,
-#wai-content {
+#wai-content,
+#specs-content {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -654,6 +659,121 @@ button.source-badge[data-active="true"]:hover {
   margin: 1.5rem 0;
   border: none;
   border-top: 1px solid var(--color-border);
+}
+
+/* ─── Specs bundle ─── */
+#specs-content h1,
+#specs-content h2,
+#specs-content h3,
+#specs-content h4,
+#specs-content h5,
+#specs-content h6 {
+  font-family: var(--font-ui);
+  line-height: 1.3;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#specs-content h1:first-child,
+#specs-content h2:first-child,
+#specs-content h3:first-child {
+  margin-top: 0;
+}
+
+#specs-content h1 { font-size: 1.6rem; }
+#specs-content h2 { font-size: 1.3rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.3rem; }
+#specs-content h3 { font-size: 1.1rem; }
+#specs-content h4 { font-size: 1rem; }
+
+#specs-content .openspec-summary { cursor: pointer; font-weight: 600; margin-bottom: 0.5rem; }
+#specs-content .openspec-heading { display: inline; margin: 0; }
+#specs-content .openspec-details-scenario .openspec-summary { font-weight: 500; }
+#specs-content .openspec-heading-scenario { font-size: 0.92rem; }
+#specs-content p { margin-top: 0.75rem; margin-bottom: 0; }
+
+#specs-content .doc-toc {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+}
+#specs-content .doc-toc ol { margin: 0; padding: 0; list-style: none; }
+#specs-content .doc-toc li { padding: 0.15rem 0; }
+#specs-content .doc-toc li.toc-indent-1 { padding-left: 1rem; }
+#specs-content .doc-toc li.toc-indent-2 { padding-left: 2rem; }
+#specs-content .doc-toc li.toc-indent-3 { padding-left: 3rem; }
+#specs-content .doc-toc li.toc-indent-4 { padding-left: 4rem; }
+#specs-content .doc-toc a { color: var(--color-text-muted); text-decoration: none; }
+#specs-content .doc-toc a:hover { color: var(--color-text); text-decoration: underline; }
+
+#specs-content a { color: var(--color-accent); text-decoration: none; }
+#specs-content a:hover { text-decoration: underline; }
+#specs-content strong { font-weight: 600; }
+#specs-content img { max-width: 100%; height: auto; }
+#specs-content ul, #specs-content ol { margin-top: 0.5rem; margin-bottom: 0.5rem; padding-left: 1.5rem; }
+#specs-content li { margin-bottom: 0.25rem; }
+#specs-content li > ul, #specs-content li > ol { margin-top: 0.25rem; margin-bottom: 0; }
+#specs-content blockquote {
+  margin: 0.75rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-muted);
+  background: var(--color-bg);
+  border-radius: 0 4px 4px 0;
+}
+#specs-content blockquote p { margin-top: 0; }
+#specs-content pre {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+#specs-content code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.15rem 0.35rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+#specs-content pre code { padding: 0; background: none; border: none; border-radius: 0; font-size: inherit; }
+#specs-content table { width: 100%; margin: 0.75rem 0; border-collapse: collapse; font-size: 0.9rem; }
+#specs-content th, #specs-content td { padding: 0.4rem 0.75rem; border: 1px solid var(--color-border); text-align: left; }
+#specs-content th { font-family: var(--font-ui); font-weight: 600; background: var(--color-bg); }
+#specs-content hr { margin: 1.5rem 0; border: none; border-top: 1px solid var(--color-border); }
+
+.specs-toc {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+}
+.specs-toc ol { margin: 0; padding: 0; list-style: none; }
+.specs-toc li { padding: 0.15rem 0; }
+.specs-toc a { color: var(--color-accent); text-decoration: none; }
+.specs-toc a:hover { text-decoration: underline; }
+
+.spec-divider {
+  margin: 2rem 0;
+  border: none;
+  border-top: 2px solid var(--color-border);
+}
+
+.spec-section { scroll-margin-top: 3rem; }
+
+.specs-empty {
+  color: var(--color-muted);
+  font-style: italic;
 }
 
 /* ─── Beads / History / WAI panels ─── */

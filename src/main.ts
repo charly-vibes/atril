@@ -39,6 +39,7 @@ const screens = {
   history: $("history-screen")!,
   wai: $("wai-screen")!,
   tree: $("tree-screen")!,
+  specs: $("specs-screen")!,
   loading: $("loading-screen")!,
   error: $("error-screen")!,
 };
@@ -67,6 +68,9 @@ const treeBack = $("tree-back")!;
 const treeBreadcrumb = $("tree-breadcrumb")!;
 const treeSearch = $("tree-search") as HTMLInputElement;
 const treeContent = $("tree-content")!;
+const specsBack = $("specs-back")!;
+const specsBreadcrumb = $("specs-breadcrumb")!;
+const specsContent = $("specs-content")!;
 
 const busyRegions = {
   overview: screens.overview,
@@ -75,6 +79,7 @@ const busyRegions = {
   history: historyContent,
   wai: waiContent,
   tree: treeContent,
+  specs: specsContent,
 };
 
 const client = new GitHubClient();
@@ -142,6 +147,8 @@ async function routeTo(target: RouteTarget) {
     await showWaiView();
   } else if (target.view === "tree") {
     showTreeView(target.search);
+  } else if (target.view === "specs") {
+    await showSpecsView();
   }
 }
 
@@ -391,6 +398,64 @@ function renderSearchResults(query: string) {
   treeContent.innerHTML = renderTreeSearchResults(results);
 }
 
+async function showSpecsView() {
+  if (!currentContext || !currentTree) return;
+
+  const specPaths = currentTree.entries
+    .filter((e) => e.type === "blob" && /^openspec\/specs\/[^/]+\/spec\.md$/.test(e.path))
+    .map((e) => e.path)
+    .sort();
+
+  specsBreadcrumb.textContent = `${currentContext.owner}/${currentContext.repo} / Specs`;
+
+  if (specPaths.length === 0) {
+    specsContent.innerHTML = `<p class="specs-empty">No specs found in this repository.</p>`;
+    showScreen("specs");
+    return;
+  }
+
+  startLoading("specs", "Loading specs…");
+
+  try {
+    const contents = await Promise.all(
+      specPaths.map((path) =>
+        client.getFileContent(
+          currentContext!.owner,
+          currentContext!.repo,
+          currentContext!.branch,
+          path,
+        ),
+      ),
+    );
+
+    const specs = specPaths.map((path, i) => ({
+      name: path.match(/^openspec\/specs\/([^/]+)\/spec\.md$/)![1]!,
+      path,
+      content: contents[i]!,
+    }));
+
+    const tocItems = specs
+      .map((s) => `<li><a href="#spec-${escapeHtml(s.name)}">${escapeHtml(s.name)}</a></li>`)
+      .join("");
+    const toc = `<nav class="specs-toc"><ol>${tocItems}</ol></nav>`;
+
+    const sections = specs
+      .map((s) => {
+        const rendered = renderReadableDocument(s.path, s.content, currentTree?.entries ?? []);
+        return `<section class="spec-section" id="spec-${escapeHtml(s.name)}">${rendered}</section>`;
+      })
+      .join('<hr class="spec-divider">');
+
+    specsContent.innerHTML = toc + sections;
+    showScreen("specs");
+    finishLoading("specs", "Specs loaded.");
+  } catch (err) {
+    finishLoading("specs", "Failed to load specs.");
+    const message = err instanceof GitHubApiError ? err.message : "Failed to load specs.";
+    showError(message, err);
+  }
+}
+
 async function showFileView(path: string, anchor?: string) {
   if (!currentContext) return;
   currentFilePath = path;
@@ -592,8 +657,8 @@ function navigateOverviewItem(kind: string | undefined, path: string | undefined
     navigate(currentContext, { view: "tree", search: "docs/" });
     return;
   }
-  if (kind === "tree") {
-    navigate(currentContext, { view: "tree", search: (path === "openspec/specs/" || path === "openspec/changes/") ? path : undefined });
+  if (kind === "openspec") {
+    navigate(currentContext, { view: "specs" });
     return;
   }
   if (kind === "history") {
@@ -713,6 +778,11 @@ fileActions.addEventListener("click", (e) => {
   if (copyButton) {
     void copyCurrentUrl(copyButton);
   }
+});
+
+$("specs-actions")!.addEventListener("click", (e) => {
+  const copyButton = (e.target as HTMLElement).closest('.copy-link-button[data-copy-scope="specs"]') as HTMLButtonElement | null;
+  if (copyButton) void copyCurrentUrl(copyButton);
 });
 
 // Changed path links in history view → path-specific history
@@ -845,7 +915,7 @@ treeContent.addEventListener("click", (e) => {
 });
 
 // Back buttons → go back in history (preserves tree → file → back = tree)
-for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack]) {
+for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack, specsBack]) {
   btn.addEventListener("click", () => {
     if (navDepth > 0) {
       history.back();

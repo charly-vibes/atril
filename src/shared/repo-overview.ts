@@ -50,7 +50,7 @@ export function suggestEntryPoints(
     suggestions.push({
       label: "Specs",
       path: hasCanonicalSpecs ? "openspec/specs/" : "openspec/changes/",
-      kind: "tree",
+      kind: hasCanonicalSpecs ? "openspec" : "tree",
     });
   }
 
