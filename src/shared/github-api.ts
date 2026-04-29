@@ -10,7 +10,7 @@ export interface GitHubTreeEntry {
 export interface TreeResult {
   entries: GitHubTreeEntry[];
   truncated: boolean;
-  commitSha: string;
+  commitSha?: string;
 }
 
 export interface CommitHistoryEntry {
@@ -49,17 +49,23 @@ export class GitHubClient {
     const key = `tree:${owner}/${repo}:${ref}`;
     if (this.cache.has(key)) return this.cache.get(key) as TreeResult;
 
-    const [treeData, commitData] = await Promise.all([
-      this.apiFetch<{ tree: GitHubTreeEntry[]; truncated: boolean }>(
-        `${API_BASE}/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`,
-      ),
-      this.apiFetch<{ sha: string }>(
-        `${API_BASE}/repos/${owner}/${repo}/commits/${ref}`,
-      ),
-    ]);
-    const result: TreeResult = { entries: treeData.tree, truncated: treeData.truncated, commitSha: commitData.sha };
+    const data = await this.apiFetch<{ tree: GitHubTreeEntry[]; truncated: boolean }>(
+      `${API_BASE}/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`,
+    );
+    const result: TreeResult = { entries: data.tree, truncated: data.truncated };
     this.cache.set(key, result);
     return result;
+  }
+
+  async getCommitSha(owner: string, repo: string, ref: string): Promise<string> {
+    const key = `commit:${owner}/${repo}:${ref}`;
+    if (this.cache.has(key)) return this.cache.get(key) as string;
+
+    const data = await this.apiFetch<{ sha: string }>(
+      `${API_BASE}/repos/${owner}/${repo}/commits/${ref}`,
+    );
+    this.cache.set(key, data.sha);
+    return data.sha;
   }
 
   async getFileContent(

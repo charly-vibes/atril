@@ -124,6 +124,11 @@ export function renderSourceBadges(sources: KnowledgeSources, suggestions: Entry
 
   const routes = new Map<string, EntryPoint>();
   for (const suggestion of suggestions) {
+    if (suggestion.kind === "tree" && (suggestion.path === "openspec/specs/" || suggestion.path === "openspec/changes/")) {
+      routes.set("openspec", suggestion);
+      continue;
+    }
+
     routes.set(suggestion.kind, suggestion);
   }
 

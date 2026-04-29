@@ -660,6 +660,10 @@ function navigateOverviewItem(kind: string | undefined, path: string | undefined
     navigate(currentContext, { view: "tree", search: "docs/" });
     return;
   }
+  if (kind === "tree") {
+    navigate(currentContext, { view: "tree", search: (path === "openspec/specs/" || path === "openspec/changes/") ? path : undefined });
+    return;
+  }
   if (kind === "openspec") {
     navigate(currentContext, { view: "specs" });
     return;
@@ -783,7 +787,7 @@ fileActions.addEventListener("click", (e) => {
   }
 });
 
-$("specs-actions")!.addEventListener("click", (e) => {
+$("specs-actions")!.addEventListener("click", async (e) => {
   const copyButton = (e.target as HTMLElement).closest('.copy-link-button[data-copy-scope="specs"]') as HTMLButtonElement | null;
   if (copyButton) void copyCurrentUrl(copyButton);
 
@@ -797,7 +801,11 @@ $("specs-actions")!.addEventListener("click", (e) => {
     const a = document.createElement("a");
     a.href = url;
     const date = new Date().toISOString().slice(0, 10);
-    const sha = (currentTree?.commitSha ?? "").slice(0, 7);
+    const sha = (currentTree?.commitSha ?? await client.getCommitSha(
+      currentContext.owner,
+      currentContext.repo,
+      currentContext.branch,
+    )).slice(0, 7);
     a.download = `${date}-${currentContext.repo}-${sha}-specs.md`;
     document.body.appendChild(a);
     a.click();

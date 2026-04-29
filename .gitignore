@@ -18,3 +18,6 @@ bun.lock
 # Local tooling / scratch space
 .playwright-mcp/
 exploration/
+
+# Generated walkthrough videos
+.wai/resources/scripts/videos/*.webm
