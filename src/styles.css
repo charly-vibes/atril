@@ -455,6 +455,7 @@ button.source-badge[data-active="true"]:hover {
 .wai-artifact-link:focus-visible,
 .canonical-spec-link:focus-visible,
 .copy-link-button:focus-visible,
+#specs-download:focus-visible,
 .beads-list-item:focus-visible,
 .beads-dep-link:focus-visible,
 .issue-ref-link:focus-visible {

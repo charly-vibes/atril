@@ -93,6 +93,7 @@ let currentBeadsFilters: BeadsFilters = {};
 let currentBeadsSelectedId: string | undefined;
 let currentFilePath: string | undefined;
 let currentTarget: RouteTarget | undefined;
+let currentSpecs: { name: string; path: string; content: string }[] = [];
 let navDepth = 0;
 
 function showScreen(name: keyof typeof screens) {
@@ -400,6 +401,7 @@ function renderSearchResults(query: string) {
 
 async function showSpecsView() {
   if (!currentContext || !currentTree) return;
+  currentSpecs = [];
 
   const specPaths = currentTree.entries
     .filter((e) => e.type === "blob" && /^openspec\/specs\/[^/]+\/spec\.md$/.test(e.path))
@@ -433,6 +435,7 @@ async function showSpecsView() {
       path,
       content: contents[i]!,
     }));
+    currentSpecs = specs;
 
     const tocItems = specs
       .map((s) => `<li><a href="#spec-${escapeHtml(s.name)}">${escapeHtml(s.name)}</a></li>`)
@@ -783,6 +786,22 @@ fileActions.addEventListener("click", (e) => {
 $("specs-actions")!.addEventListener("click", (e) => {
   const copyButton = (e.target as HTMLElement).closest('.copy-link-button[data-copy-scope="specs"]') as HTMLButtonElement | null;
   if (copyButton) void copyCurrentUrl(copyButton);
+
+  const downloadButton = (e.target as HTMLElement).closest("#specs-download") as HTMLButtonElement | null;
+  if (downloadButton && currentSpecs.length > 0 && currentContext) {
+    const combined = currentSpecs
+      .map((s) => `# ${s.name}\n\n${s.content}`)
+      .join("\n\n---\n\n");
+    const blob = new Blob([combined], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${currentContext.repo}-specs.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 });
 
 // Changed path links in history view → path-specific history
