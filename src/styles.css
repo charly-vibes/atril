@@ -751,14 +751,11 @@ button.source-badge[data-active="true"]:hover {
 #specs-content th { font-family: var(--font-ui); font-weight: 600; background: var(--color-bg); }
 #specs-content hr { margin: 1.5rem 0; border: none; border-top: 1px solid var(--color-border); }
 
-
 .spec-divider {
   margin: 2rem 0;
   border: none;
   border-top: 2px solid var(--color-border);
 }
-
-.spec-section { scroll-margin-top: 3rem; }
 
 .specs-empty {
   color: var(--color-muted);

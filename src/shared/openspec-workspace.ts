@@ -137,7 +137,7 @@ function renderChangeCard(
 /**
  * Render the OpenSpec workspace landing page from the cached tree index.
  * The overview intentionally uses index data only; optional rendered spec content
- * may be passed by callers that preserve the legacy specs bundle below it.
+ * may be passed by callers that preserve the rendered specs bundle below it.
  */
 export function renderOpenSpecWorkspaceOverview(
   index: OpenSpecIndex,

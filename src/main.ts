@@ -473,7 +473,7 @@ async function showSpecsView() {
       renderedSpecsHtml = specs
         .map((s) => {
           const rendered = renderReadableDocument(s.path, s.content, currentTree?.entries ?? []);
-          return `<section class="spec-section" id="spec-${escapeHtml(s.name)}">${rendered}</section>`;
+          return `<section class="spec-section">${rendered}</section>`;
         })
         .join('<hr class="spec-divider">');
     }
