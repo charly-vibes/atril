@@ -169,7 +169,9 @@ describe("renderTreeSearchResults", () => {
 
     expect(html).toContain('type="button" class="tree-search-item" data-path="docs/guide.md"');
     expect(html).toContain('class="tree-search-name">guide.md</span>');
-    expect(html).toContain('class="tree-search-path">docs</span>');
+    // Single result: dir appears as section header, not as per-item path span
+    expect(html).toContain('class="tree-search-section-header">docs</');
+    expect(html).not.toContain('class="tree-search-path"');
   });
 
   test("shows common parent dir once as section header when all items share the same dir", () => {
@@ -198,7 +200,7 @@ describe("renderTreeSearchResults", () => {
     expect(pathSpanMatches).toBe(0);
   });
 
-  test("still shows per-item dir when items have different parent dirs", () => {
+  test("groups results by dir with section headers when items have different parent dirs", () => {
     const entries: GitHubTreeEntry[] = [
       { path: "openspec/specs/beads-viewer/spec.md", type: "blob", sha: "a1" },
       { path: "openspec/changes/add-reader/specs/platform/spec.md", type: "blob", sha: "a2" },
@@ -206,12 +208,14 @@ describe("renderTreeSearchResults", () => {
 
     const html = renderTreeSearchResults(entries);
 
-    // No shared-dir header
-    expect(html).not.toContain('class="tree-search-section-header"');
+    // Each dir appears as a section header
+    expect(html).toContain('class="tree-search-section-header">openspec/specs</');
+    expect(html).toContain('class="tree-search-section-header">openspec/changes/add-reader/specs</');
 
-    // Each item still shows its own dir
-    expect(html).toContain('class="tree-search-path">openspec/specs</span>');
-    expect(html).toContain('class="tree-search-path">openspec/changes/add-reader/specs</span>');
+    // Items show only their name, not a per-item path span
+    expect(html).toContain('class="tree-search-name">beads-viewer</span>');
+    expect(html).toContain('class="tree-search-name">platform</span>');
+    expect(html).not.toContain('class="tree-search-path"');
   });
 });
 

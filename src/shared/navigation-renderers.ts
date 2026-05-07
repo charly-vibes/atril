@@ -39,33 +39,44 @@ export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
     return { path: entry.path, name, dir };
   });
 
-  const allSameDir = items.length > 1 && items.every((item) => item.dir === items[0]!.dir);
+  const groups = new Map<string, typeof items>();
+  for (const item of items) {
+    const bucket = groups.get(item.dir) ?? [];
+    bucket.push(item);
+    groups.set(item.dir, bucket);
+  }
 
-  if (allSameDir) {
-    const commonDir = items[0]!.dir;
-    const listItems = items
+  if (groups.size === 1) {
+    const [[commonDir, groupItems]] = [...groups.entries()];
+    const listItems = groupItems!
       .map(
         ({ path, name }) => `<li>
         <button type="button" class="tree-search-item" data-path="${escapeHtml(path)}">
           <span class="tree-search-name">${escapeHtml(name)}</span>
-          <span class="tree-search-path"></span>
         </button>
       </li>`,
       )
       .join("");
-    return `<ul class="tree-search-results"><li class="tree-search-section-header">${escapeHtml(commonDir)}</li>${listItems}</ul>`;
+    return `<ul class="tree-search-results"><li class="tree-search-section-header">${escapeHtml(commonDir!)}</li>${listItems}</ul>`;
   }
 
-  return `<ul class="tree-search-results">${items
-    .map(
-      ({ path, name, dir }) => `<li>
-      <button type="button" class="tree-search-item" data-path="${escapeHtml(path)}">
-        <span class="tree-search-name">${escapeHtml(name)}</span>
-        <span class="tree-search-path">${dir ? escapeHtml(dir) : ""}</span>
-      </button>
-    </li>`,
-    )
-    .join("")}</ul>`;
+  const sections = [...groups.entries()]
+    .map(([dir, groupItems]) => {
+      const header = dir ? `<li class="tree-search-section-header">${escapeHtml(dir)}</li>` : "";
+      const listItems = groupItems
+        .map(
+          ({ path, name }) => `<li>
+          <button type="button" class="tree-search-item" data-path="${escapeHtml(path)}">
+            <span class="tree-search-name">${escapeHtml(name)}</span>
+          </button>
+        </li>`,
+        )
+        .join("");
+      return `${header}${listItems}`;
+    })
+    .join("");
+
+  return `<ul class="tree-search-results">${sections}</ul>`;
 }
 
 export function renderBreadcrumb(path: string): string {

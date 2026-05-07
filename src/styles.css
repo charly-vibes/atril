@@ -1561,6 +1561,19 @@ details[open] > .wai-summary::before {
   list-style: none;
 }
 
+.tree-search-section-header {
+  padding: 0.5rem 0.75rem 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  letter-spacing: 0.03em;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.tree-search-section-header:first-child {
+  border-top: none;
+}
+
 .tree-search-item {
   display: flex;
   width: 100%;
@@ -1582,12 +1595,6 @@ details[open] > .wai-summary::before {
   font-family: var(--font-ui);
   font-weight: 500;
   font-size: 0.85rem;
-}
-
-.tree-search-item .tree-search-path {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-muted);
 }
 
 .tree-empty {
