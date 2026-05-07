@@ -159,6 +159,21 @@ describe("renderOpenSpecWorkspaceOverview — first-class changes", () => {
     const html = renderOpenSpecWorkspaceOverview(index);
 
     expect(html).not.toContain("tasks complete");
+    expect(html).not.toContain("tasks document available");
+  });
+
+  test("shows non-numeric task availability when tasks.md has no parseable checkboxes", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/changes/my-change/proposal.md",
+      "openspec/changes/my-change/tasks.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index, {
+      taskSummaries: { "my-change": null },
+    });
+
+    expect(html).toContain("tasks document available");
+    expect(html).not.toContain("tasks complete");
   });
 
   test("renders multiple change cards when multiple changes exist", () => {
@@ -184,6 +199,11 @@ describe("parseTaskSummary", () => {
 
   test("returns null when content has no checkboxes", () => {
     expect(parseTaskSummary("# Section\n\nSome text with no tasks.")).toBeNull();
+  });
+
+  test("returns null for malformed checklists that are not markdown checkboxes", () => {
+    const content = "1. done\n2. todo\n- [] not valid\n- [maybe] not valid";
+    expect(parseTaskSummary(content)).toBeNull();
   });
 
   test("returns null for empty content", () => {

@@ -453,13 +453,12 @@ async function showSpecsView() {
       Promise.all(tasksPaths.map((p) => fetchFile(p).catch(() => null))),
     ]);
 
-    const taskSummaries: Record<string, { done: number; total: number }> = {};
+    const taskSummaries: Record<string, { done: number; total: number } | null> = {};
     for (let i = 0; i < tasksPaths.length; i++) {
       const content = tasksContents[i];
       if (!content) continue;
       const changeId = tasksPaths[i]!.match(/^openspec\/changes\/([^/]+)\/tasks\.md$/)![1]!;
-      const summary = parseTaskSummary(content);
-      if (summary) taskSummaries[changeId] = summary;
+      taskSummaries[changeId] = parseTaskSummary(content);
     }
 
     const specs = specPaths.map((path, i) => ({

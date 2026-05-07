@@ -6,7 +6,7 @@
 ## 1. Workspace model and tests
 
 - [x] 1.1 Add failing tests for indexing the whole `openspec/` workspace: project documents, current specs, active changes, archived changes, and raw files.
-- [ ] 1.2 Add failing tests for partial workspaces with missing `project.md`, missing specs, missing active changes, missing active-change documents, malformed `tasks.md`, or missing archive.
+- [x] 1.2 Add failing tests for partial workspaces with missing `project.md`, missing specs, missing active changes, missing active-change documents, malformed `tasks.md`, or missing archive.
 - [x] 1.3 Implement or extend the OpenSpec index model to expose workspace sections without additional GitHub API calls beyond the cached tree.
 
 ## 2. Overview entry experience
@@ -39,7 +39,7 @@
 
 ## 6. Validation and review
 
-- [ ] 6.1 Run `openspec validate add-openspec-workspace-view --strict`.
-- [ ] 6.2 Run unit tests for workspace indexing, routing, and rendering.
+- [x] 6.1 Run `openspec validate add-openspec-workspace-view --strict`.
+- [x] 6.2 Run unit tests for workspace indexing, routing, and rendering.
 - [ ] 6.3 Manually verify the workflow on a repository with `project.md`, `AGENTS.md`, current specs, active changes, incomplete changes, and archives.
 - [ ] 6.4 Run `/ro5` or the Rule of 5 review on the implemented workflow before marking complete.

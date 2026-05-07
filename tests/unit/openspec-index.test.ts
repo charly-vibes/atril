@@ -104,6 +104,21 @@ describe("buildOpenSpecIndex", () => {
     expect(index.changeFiles["add-reader"]).toContain("openspec/changes/add-reader/specs/platform/spec.md");
   });
 
+  test("indexes incomplete changes even when proposal.md or tasks.md is missing", () => {
+    const entries = tree(
+      "openspec/changes/add-reader/design.md",
+      "openspec/changes/add-reader/specs/platform/spec.md",
+    );
+
+    const index = buildOpenSpecIndex(entries);
+
+    expect(index.changes).toEqual(["add-reader"]);
+    expect(index.changeFiles["add-reader"]).toEqual([
+      "openspec/changes/add-reader/design.md",
+      "openspec/changes/add-reader/specs/platform/spec.md",
+    ]);
+  });
+
   test("detects new specs introduced by a change", () => {
     const entries = tree(
       "openspec/changes/add-reader/specs/repo-overview/spec.md",

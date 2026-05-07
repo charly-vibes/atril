@@ -3,7 +3,7 @@ import type { OpenSpecIndex } from "./openspec-index";
 
 interface RenderOpenSpecWorkspaceOptions {
   renderedSpecsHtml?: string;
-  taskSummaries?: Record<string, { done: number; total: number }>;
+  taskSummaries?: Record<string, { done: number; total: number } | null>;
 }
 
 /** Count `- [x]` (done) and `- [ ]` (open) checkboxes in markdown task content. */
@@ -46,7 +46,7 @@ function projectEmptyState(projectDocuments: string[]): string {
 function renderChangeCard(
   changeId: string,
   files: string[],
-  taskSummary?: { done: number; total: number },
+  taskSummary?: { done: number; total: number } | null,
 ): string {
   const fileSet = new Set(files);
   const base = `openspec/changes/${changeId}`;
@@ -75,7 +75,9 @@ function renderChangeCard(
 
   const summaryHtml = taskSummary
     ? `<p class="change-task-summary">${taskSummary.done}/${taskSummary.total} tasks complete</p>`
-    : "";
+    : taskSummary === null && fileSet.has(tasksPath)
+      ? `<p class="change-task-summary">tasks document available</p>`
+      : "";
 
   return `<article class="change-card" data-change-id="${escapeHtml(changeId)}">
     <h3>${escapeHtml(changeId)}</h3>
