@@ -237,10 +237,10 @@ export function renderBeadsListView(
   const selected = visibleSelectedId
     ? result.issues.find((i) => i.id === visibleSelectedId)
     : undefined;
-  // Only mark as explicit selection when the caller provided a matching ID.
-  // Auto-resolve (no selectedId given) is a desktop convenience and should not
-  // hide the list on mobile.
-  const hasExplicitSelection = !!(selectedId && selected);
+  // Only mark as explicit selection when the caller's ID is still the resolved one.
+  // If the requested ID was filtered out and the renderer fell back to the first
+  // visible issue, treat it as no explicit selection so mobile shows the list.
+  const hasExplicitSelection = !!(selectedId && visibleSelectedId === selectedId);
 
   const listItems = filtered.length > 0
     ? filtered

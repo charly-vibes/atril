@@ -278,6 +278,29 @@ describe("renderBeadsListView", () => {
     expect(html).not.toContain("Select an issue to view details");
     expect(html).not.toContain('class="beads-detail-panel"');
   });
+
+  test("does not add has-selection when the selected id is filtered out", () => {
+    // selectedId points to a closed issue but the filter shows only open ones.
+    // hasExplicitSelection must be false — mobile shows the list, not the detail.
+    const result = makeResult([
+      makeIssue({ id: "a-1", status: "open", title: "Open issue", description: "Open detail" }),
+      makeIssue({ id: "a-2", status: "closed", title: "Closed issue", description: "Closed detail" }),
+    ]);
+    const html = renderBeadsListView(result, "a-2", { status: "open" });
+    expect(html).not.toContain("has-selection");
+  });
+
+  test("adds has-selection only for an explicit selection that is visible", () => {
+    const result = makeResult([
+      makeIssue({ id: "a-1", status: "open", title: "Open issue" }),
+      makeIssue({ id: "a-2", status: "open", title: "Other issue" }),
+    ]);
+    const withExplicit = renderBeadsListView(result, "a-2");
+    const withAutoSelect = renderBeadsListView(result);
+
+    expect(withExplicit).toContain("has-selection");
+    expect(withAutoSelect).not.toContain("has-selection");
+  });
 });
 
 describe("beads keyboard accessibility", () => {
