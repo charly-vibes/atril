@@ -112,4 +112,27 @@ describe("buildOpenSpecIndex", () => {
     const index = buildOpenSpecIndex(entries);
     expect(index.changeIntroduces["add-reader"]).toEqual(["repo-overview"]);
   });
+
+  test("collects project-level documents at the openspec/ root", () => {
+    const entries = tree(
+      "openspec/project.md",
+      "openspec/AGENTS.md",
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.projectDocuments).toContain("openspec/project.md");
+    expect(index.projectDocuments).toContain("openspec/AGENTS.md");
+    expect(index.projectDocuments).not.toContain("openspec/specs/platform/spec.md");
+    expect(index.projectDocuments).not.toContain("openspec/changes/add-reader/proposal.md");
+  });
+
+  test("returns empty projectDocuments when no root-level openspec files exist", () => {
+    const entries = tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.projectDocuments).toEqual([]);
+  });
 });
