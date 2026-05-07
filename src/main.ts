@@ -229,7 +229,6 @@ async function showBeadsView(target: Extract<RouteTarget, { view: "beads" }>) {
         currentContext.branch,
       );
     }
-    currentBeadsSelectedId = resolveVisibleSelectedIssueId(currentBeads, currentBeadsSelectedId, currentBeadsFilters);
     beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
     showScreen("beads");
     finishLoading("beads", "Issues loaded.");
@@ -247,7 +246,6 @@ function rerenderBeadsList() {
   const cursorPos = wasSearch ? (activeEl as HTMLInputElement).selectionStart : null;
   const panelWasOpen = beadsContent.querySelector(".beads-filter-panel")?.classList.contains("is-open") ?? false;
 
-  currentBeadsSelectedId = resolveVisibleSelectedIssueId(currentBeads, currentBeadsSelectedId, currentBeadsFilters);
   beadsContent.innerHTML = renderBeadsListView(currentBeads, currentBeadsSelectedId, currentBeadsFilters, currentTree?.entries);
 
   if (panelWasOpen) {
@@ -914,6 +912,13 @@ beadsContent.addEventListener("click", (e) => {
   const copyButton = (e.target as HTMLElement).closest('.copy-link-button[data-copy-scope="issue"]') as HTMLButtonElement | null;
   if (copyButton) {
     void copyCurrentUrl(copyButton);
+    return;
+  }
+
+  // Mobile back button → deselect issue
+  const backButton = (e.target as HTMLElement).closest(".beads-back-button") as HTMLElement | null;
+  if (backButton && currentContext) {
+    navigate(currentContext, { view: "beads", mode: "list" });
     return;
   }
 

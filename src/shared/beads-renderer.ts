@@ -97,7 +97,8 @@ function renderIssueDetail(issue: BeadsIssue, treeEntries?: GitHubTreeEntry[]): 
   const issueText = [issue.title, issue.description ?? ""].join("\n");
   const refs = treeEntries ? resolveIssueReferences(issueText, treeEntries) : [];
 
-  return `<article class="beads-detail">
+  return `<button type="button" class="beads-back-button" aria-label="Back to issues list">← Back</button>
+  <article class="beads-detail">
     <div class="beads-detail-header">
       <h3>${escapeHtml(issue.title)}</h3>
       <button type="button" class="copy-link-button" data-copy-scope="issue" aria-label="Copy link to this issue">🔗</button>
@@ -236,6 +237,10 @@ export function renderBeadsListView(
   const selected = visibleSelectedId
     ? result.issues.find((i) => i.id === visibleSelectedId)
     : undefined;
+  // Only mark as explicit selection when the caller provided a matching ID.
+  // Auto-resolve (no selectedId given) is a desktop convenience and should not
+  // hide the list on mobile.
+  const hasExplicitSelection = !!(selectedId && selected);
 
   const listItems = filtered.length > 0
     ? filtered
@@ -262,7 +267,7 @@ export function renderBeadsListView(
   return `<section class="beads-list-view">
     ${freshness}
     ${renderFilterToolbar(activeFilters)}
-    <div class="beads-layout">
+    <div class="beads-layout${hasExplicitSelection ? " has-selection" : ""}">
       <ul class="beads-list">${listItems}</ul>
       <div class="beads-detail-panel">${detail}</div>
     </div>

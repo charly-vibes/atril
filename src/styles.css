@@ -1128,17 +1128,49 @@ button.source-badge[data-active="true"]:hover {
   font-size: 0.85rem;
 }
 
+.beads-back-button {
+  display: none;
+}
+
 @media (max-width: 600px) {
+  .beads-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-fg);
+    cursor: pointer;
+  }
+
   .beads-layout {
     flex-direction: column;
   }
-  .beads-list {
-    flex: none;
-    max-height: 40vh;
+
+  /* No selection: show list, hide detail */
+  .beads-layout:not(.has-selection) .beads-list {
+    flex: 1;
     border-right: none;
-    border-bottom: 1px solid var(--color-border);
     padding-right: 0;
-    padding-bottom: 0.75rem;
+  }
+
+  .beads-layout:not(.has-selection) .beads-detail-panel {
+    display: none;
+  }
+
+  /* Has selection: show detail, hide list */
+  .beads-layout.has-selection .beads-list {
+    display: none;
+  }
+
+  .beads-layout.has-selection .beads-detail-panel {
+    flex: 1;
+    max-height: none;
   }
 }
 
