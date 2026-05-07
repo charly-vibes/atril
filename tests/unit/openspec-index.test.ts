@@ -127,6 +127,23 @@ describe("buildOpenSpecIndex", () => {
     expect(index.projectDocuments).not.toContain("openspec/changes/add-reader/proposal.md");
   });
 
+  test("collects all blob files under openspec as workspace files", () => {
+    const entries = tree(
+      "openspec/project.md",
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+      "openspec/changes/archive/2026-01-15-add-legacy/proposal.md",
+      "README.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.workspaceFiles).toEqual([
+      "openspec/changes/add-reader/proposal.md",
+      "openspec/changes/archive/2026-01-15-add-legacy/proposal.md",
+      "openspec/project.md",
+      "openspec/specs/platform/spec.md",
+    ]);
+  });
+
   test("returns empty projectDocuments when no root-level openspec files exist", () => {
     const entries = tree(
       "openspec/specs/platform/spec.md",

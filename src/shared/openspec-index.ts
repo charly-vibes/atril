@@ -17,8 +17,10 @@ export interface OpenSpecIndex {
   capabilityFiles: Record<string, string[]>;
   /** change-id → list of file paths */
   changeFiles: Record<string, string[]>;
-  /** Files directly under openspec/ (e.g. project.md, AGENTS.md) */
+  /** First-class project documents directly under openspec/ (e.g. project.md, AGENTS.md). */
   projectDocuments: string[];
+  /** All blob files under openspec/ for raw workspace navigation/counts, including projectDocuments. */
+  workspaceFiles: string[];
 }
 
 const SPEC_PREFIX = "openspec/specs/";
@@ -56,12 +58,14 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
   const capabilityFiles: Record<string, string[]> = {};
   const changeFiles: Record<string, string[]> = {};
   const projectDocuments: string[] = [];
+  const workspaceFiles: string[] = [];
 
   // Delta spec paths: changes/<change-id>/specs/<capability>/
   const deltaSpecs: { changeId: string; capability: string }[] = [];
 
   for (const entry of entries) {
     if (entry.type !== "blob") continue;
+    if (entry.path.startsWith("openspec/")) workspaceFiles.push(entry.path);
 
     const capabilityName = getCapabilityName(entry.path);
     if (capabilityName) {
@@ -116,6 +120,7 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
     changeIntroduces,
     capabilityFiles,
     changeFiles,
-    projectDocuments,
+    projectDocuments: projectDocuments.sort(),
+    workspaceFiles: workspaceFiles.sort(),
   };
 }

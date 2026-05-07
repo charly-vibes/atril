@@ -14,6 +14,8 @@ import { buildWaiArtifactGroups, renderWaiOverview, renderLanguageEntry } from "
 import { listBoundedContexts, renderLanguageOverview, extractGlossaryTerms, renderGlossary, termToAnchor } from "./views/language-explorer";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
+import { buildOpenSpecIndex } from "./shared/openspec-index";
+import { renderOpenSpecWorkspaceOverview, parseTaskSummary } from "./shared/openspec-workspace";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
   renderBreadcrumb,
@@ -403,59 +405,95 @@ async function showSpecsView() {
   if (!currentContext || !currentTree) return;
   currentSpecs = [];
 
+  const index = buildOpenSpecIndex(currentTree.entries);
+  const hasOpenSpecWorkspace =
+    index.workspaceFiles.length > 0 ||
+    index.projectDocuments.length > 0 ||
+    index.capabilities.length > 0 ||
+    index.changes.length > 0 ||
+    index.archivedChanges.length > 0;
+
   const specPaths = currentTree.entries
     .filter((e) => e.type === "blob" && /^openspec\/specs\/[^/]+\/spec\.md$/.test(e.path))
     .map((e) => e.path)
     .sort();
 
-  specsBreadcrumb.textContent = `${currentContext.owner}/${currentContext.repo} / Specs`;
+  specsBreadcrumb.textContent = `${currentContext.owner}/${currentContext.repo} / ${hasOpenSpecWorkspace ? "OpenSpec Workspace" : "Specs"}`;
 
-  if (specPaths.length === 0) {
+  if (!hasOpenSpecWorkspace) {
     specsContent.innerHTML = `<p class="specs-empty">No specs found in this repository.</p>`;
     showScreen("specs");
     return;
   }
 
-  startLoading("specs", "Loading specs…");
+  specsContent.innerHTML = renderOpenSpecWorkspaceOverview(index);
+  showScreen("specs");
+
+  const tasksPaths = index.changes
+    .map((id) => `openspec/changes/${id}/tasks.md`)
+    .filter((p) => currentTree!.entries.some((e) => e.path === p && e.type === "blob"));
+
+  if (specPaths.length === 0 && tasksPaths.length === 0) {
+    return;
+  }
+
+  beginAsyncUpdate(specsContent, loadingMessage, "Loading specs…");
 
   try {
-    const contents = await Promise.all(
-      specPaths.map((path) =>
-        client.getFileContent(
-          currentContext!.owner,
-          currentContext!.repo,
-          currentContext!.branch,
-          path,
-        ),
-      ),
-    );
+    const fetchFile = (path: string) =>
+      client.getFileContent(
+        currentContext!.owner,
+        currentContext!.repo,
+        currentContext!.branch,
+        path,
+      );
+
+    const [specContents, tasksContents] = await Promise.all([
+      Promise.all(specPaths.map(fetchFile)),
+      Promise.all(tasksPaths.map((p) => fetchFile(p).catch(() => null))),
+    ]);
+
+    const taskSummaries: Record<string, { done: number; total: number }> = {};
+    for (let i = 0; i < tasksPaths.length; i++) {
+      const content = tasksContents[i];
+      if (!content) continue;
+      const changeId = tasksPaths[i]!.match(/^openspec\/changes\/([^/]+)\/tasks\.md$/)![1]!;
+      const summary = parseTaskSummary(content);
+      if (summary) taskSummaries[changeId] = summary;
+    }
 
     const specs = specPaths.map((path, i) => ({
       name: path.match(/^openspec\/specs\/([^/]+)\/spec\.md$/)![1]!,
       path,
-      content: contents[i]!,
+      content: specContents[i]!,
     }));
     currentSpecs = specs;
 
-    const tocItems = specs
-      .map((s) => `<li><a href="#spec-${escapeHtml(s.name)}">${escapeHtml(s.name)}</a></li>`)
-      .join("");
-    const toc = `<nav class="specs-toc"><ol>${tocItems}</ol></nav>`;
+    let renderedSpecsHtml: string | undefined;
+    if (specs.length > 0) {
+      const tocItems = specs
+        .map((s) => `<li><a href="#spec-${escapeHtml(s.name)}">${escapeHtml(s.name)}</a></li>`)
+        .join("");
+      const toc = `<nav class="specs-toc"><ol>${tocItems}</ol></nav>`;
+      const sections = specs
+        .map((s) => {
+          const rendered = renderReadableDocument(s.path, s.content, currentTree?.entries ?? []);
+          return `<section class="spec-section" id="spec-${escapeHtml(s.name)}">${rendered}</section>`;
+        })
+        .join('<hr class="spec-divider">');
+      renderedSpecsHtml = toc + sections;
+    }
 
-    const sections = specs
-      .map((s) => {
-        const rendered = renderReadableDocument(s.path, s.content, currentTree?.entries ?? []);
-        return `<section class="spec-section" id="spec-${escapeHtml(s.name)}">${rendered}</section>`;
-      })
-      .join('<hr class="spec-divider">');
-
-    specsContent.innerHTML = toc + sections;
+    specsContent.innerHTML = renderOpenSpecWorkspaceOverview(index, { renderedSpecsHtml, taskSummaries });
     showScreen("specs");
-    finishLoading("specs", "Specs loaded.");
+    endAsyncUpdate(specsContent, loadingMessage, "OpenSpec workspace loaded.");
   } catch (err) {
-    finishLoading("specs", "Failed to load specs.");
     const message = err instanceof GitHubApiError ? err.message : "Failed to load specs.";
-    showError(message, err);
+    specsContent.innerHTML = renderOpenSpecWorkspaceOverview(index, {
+      renderedSpecsHtml: `<p class="specs-empty">${escapeHtml(message)}</p>`,
+    });
+    showScreen("specs");
+    endAsyncUpdate(specsContent, loadingMessage, "Failed to load specs.");
   }
 }
 
@@ -784,6 +822,14 @@ fileActions.addEventListener("click", (e) => {
   const copyButton = target.closest('.copy-link-button[data-copy-scope="file"]') as HTMLButtonElement | null;
   if (copyButton) {
     void copyCurrentUrl(copyButton);
+  }
+});
+
+specsContent.addEventListener("click", (e) => {
+  const docButton = (e.target as HTMLElement).closest(".workspace-document-link, .workspace-file-link") as HTMLElement | null;
+  const path = docButton?.dataset.path;
+  if (path && currentContext) {
+    navigate(currentContext, { view: "file", path });
   }
 });
 

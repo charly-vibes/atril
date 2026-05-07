@@ -107,7 +107,7 @@ describe("suggestEntryPoints", () => {
     ]);
   });
 
-  test("suggests specs tree when openspec present", () => {
+  test("suggests OpenSpec workspace when openspec present", () => {
     const entries = tree("openspec/project.md", "openspec/specs/platform/spec.md");
     const sources: KnowledgeSources = {
       openspec: true,
@@ -119,7 +119,7 @@ describe("suggestEntryPoints", () => {
     };
     const suggestions = suggestEntryPoints(sources, entries);
     expect(suggestions).toEqual([
-      { label: "Specs", path: "openspec/specs/", kind: "tree" },
+      { label: "Specs", path: "openspec/", kind: "openspec" },
     ]);
   });
 

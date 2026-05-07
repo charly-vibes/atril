@@ -777,6 +777,69 @@ button.source-badge[data-active="true"]:hover {
   font-style: italic;
 }
 
+.openspec-workspace-overview > h1 {
+  font-family: var(--font-ui);
+  margin-bottom: 0.5rem;
+}
+
+.workspace-intro,
+.workspace-count,
+.workspace-empty {
+  color: var(--color-muted);
+}
+
+.workspace-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.workspace-section {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.workspace-section h2 {
+  font-family: var(--font-ui);
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 0.35rem;
+}
+
+.workspace-section ul {
+  padding-left: 1.25rem;
+}
+
+.workspace-document-link,
+.workspace-file-link {
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.workspace-document-link:hover,
+.workspace-file-link:hover {
+  text-decoration: underline;
+}
+
+.workspace-document-link:focus-visible,
+.workspace-file-link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.workspace-specs-bundle {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
+
 /* ─── Beads / History / WAI panels ─── */
 .beads-panel h3,
 .history-panel h3,

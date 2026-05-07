@@ -18,7 +18,7 @@ describe("renderSourceBadges", () => {
     const html = renderSourceBadges(
       { openspec: true, beads: true, wai: true, docs: true, readme: true, language: false },
       [
-        { label: "Specs", path: "openspec/specs/", kind: "tree" },
+        { label: "Specs", path: "openspec/", kind: "openspec" },
         { label: "Issues", path: ".beads/issues.jsonl", kind: "beads" },
         { label: "Project memory", path: ".wai/", kind: "wai" },
         { label: "Documentation", path: "docs/", kind: "docs" },
@@ -26,7 +26,7 @@ describe("renderSourceBadges", () => {
       ],
     );
 
-    expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="openspec" data-kind="tree" data-path="openspec/specs/"');
+    expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="openspec" data-kind="openspec" data-path="openspec/"');
     expect(html).toContain('data-source="beads" data-kind="beads" data-path=".beads/issues.jsonl"');
     expect(html).toContain('data-source="readme" data-kind="readme" data-path="README.rst"');
   });
@@ -67,11 +67,11 @@ describe("renderSourceBadges", () => {
     expect(html).toContain('type="button" class="source-badge" data-active="true" data-source="beads"');
   });
 
-  // Task 5.1 — active SPECS pill is a clickable button when openspec is detected
+  // Workspace view — active SPECS pill is a clickable button when openspec is detected
   test("active SPECS pill is rendered as a button when openspec source is present", () => {
     const html = renderSourceBadges(
       { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
-      [{ label: "Specs", path: "openspec/specs/", kind: "tree" }],
+      [{ label: "Specs", path: "openspec/", kind: "openspec" }],
     );
 
     expect(html).toContain('type="button"');
@@ -80,28 +80,14 @@ describe("renderSourceBadges", () => {
     expect(html).toContain('data-source="openspec"');
   });
 
-  // Task 5.2 — SPECS pill carries the routing metadata to navigate to the OpenSpec navigator
-  test("active SPECS pill carries tree kind and openspec/specs/ path for navigator routing", () => {
+  test("active SPECS pill carries openspec kind and root path for workspace routing", () => {
     const html = renderSourceBadges(
       { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
-      [{ label: "Specs", path: "openspec/specs/", kind: "tree" }],
+      [{ label: "Specs", path: "openspec/", kind: "openspec" }],
     );
 
-    // The click handler in main.ts uses data-kind and data-path to route the badge click.
-    // For SPECS: kind="tree" + path="openspec/specs/" → { view: "tree", search: "openspec/specs/" }
-    expect(html).toContain('data-kind="tree"');
-    expect(html).toContain('data-path="openspec/specs/"');
-  });
-
-  // Task 5.2 — falls back to openspec/changes/ when no canonical specs exist yet
-  test("active SPECS pill uses openspec/changes/ path when only changes exist", () => {
-    const html = renderSourceBadges(
-      { openspec: true, beads: false, wai: false, docs: false, readme: false, language: false },
-      [{ label: "Specs", path: "openspec/changes/", kind: "tree" }],
-    );
-
-    expect(html).toContain('data-path="openspec/changes/"');
-    expect(html).toContain('data-kind="tree"');
+    expect(html).toContain('data-kind="openspec"');
+    expect(html).toContain('data-path="openspec/"');
   });
 
   // Task 5.3 — inactive SPECS pill must not be a button (already verified above, explicit guard)
@@ -284,13 +270,9 @@ describe("source badge click wiring in main.ts", () => {
     expect(mainTs).toContain("badge.dataset.path");
   });
 
-  test("navigateOverviewItem routes kind=tree + openspec path to the tree view scoped to openspec/specs/", () => {
-    // The function must handle kind === "tree" and navigate to { view: "tree", search: path }
-    // when the path is an openspec path
-    expect(mainTs).toContain('kind === "tree"');
-    expect(mainTs).toContain('"openspec/specs/"');
-    expect(mainTs).toContain('"openspec/changes/"');
-    expect(mainTs).toContain('view: "tree"');
+  test("navigateOverviewItem routes kind=openspec to the Specs/OpenSpec Workspace view", () => {
+    expect(mainTs).toContain('kind === "openspec"');
+    expect(mainTs).toContain('view: "specs"');
   });
 
   test("navigateOverviewItem routes inactive-source kinds (beads, wai, docs) without requiring openspec logic", () => {
@@ -298,5 +280,18 @@ describe("source badge click wiring in main.ts", () => {
     expect(mainTs).toContain('kind === "beads"');
     expect(mainTs).toContain('kind === "wai"');
     expect(mainTs).toContain('kind === "docs"');
+  });
+
+  test("workspace document and file buttons route through the file view", () => {
+    expect(mainTs).toContain('closest(".workspace-document-link, .workspace-file-link")');
+    expect(mainTs).toContain('view: "file", path');
+  });
+
+  test("showSpecsView renders the workspace overview before fetching spec contents", () => {
+    const renderIndex = mainTs.indexOf('specsContent.innerHTML = renderOpenSpecWorkspaceOverview(index);');
+    const fetchIndex = mainTs.indexOf('const [specContents, tasksContents] = await Promise.all');
+    expect(renderIndex).toBeGreaterThan(-1);
+    expect(fetchIndex).toBeGreaterThan(-1);
+    expect(renderIndex).toBeLessThan(fetchIndex);
   });
 });

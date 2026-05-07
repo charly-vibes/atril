@@ -31,7 +31,7 @@ describe("scenario: repository with all knowledge sources", () => {
     const s = detectKnowledgeSources(entries);
     const suggestions = suggestEntryPoints(s, entries);
     expect(suggestions.map((entry) => entry.kind)).toEqual([
-      "tree",
+      "openspec",
       "beads",
       "wai",
       "docs",
