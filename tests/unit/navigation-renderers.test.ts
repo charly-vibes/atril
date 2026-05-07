@@ -3,6 +3,7 @@ import {
   renderBreadcrumb,
   renderFileActions,
   renderFileBreadcrumb,
+  renderPendingChangeIndicator,
   renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
@@ -174,6 +175,32 @@ describe("renderTreeSearchResults", () => {
     expect(html).not.toContain('class="tree-search-path"');
   });
 
+  test("shows '(root)' section header for a single result at the repo root", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: "README.md", type: "blob", sha: "abc" },
+    ];
+
+    const html = renderTreeSearchResults(entries);
+
+    expect(html).toContain('class="tree-search-section-header">(root)</');
+    expect(html).toContain('class="tree-search-name">README.md</span>');
+    expect(html).not.toContain('class="tree-search-section-header"><');
+  });
+
+  test("shows '(root)' header for root-level files when mixed with sub-dir results", () => {
+    const entries: GitHubTreeEntry[] = [
+      { path: "README.md", type: "blob", sha: "abc" },
+      { path: "docs/guide.md", type: "blob", sha: "def" },
+    ];
+
+    const html = renderTreeSearchResults(entries);
+
+    expect(html).toContain('class="tree-search-section-header">(root)</');
+    expect(html).toContain('class="tree-search-section-header">docs</');
+    // No blank headers
+    expect(html).not.toContain('class="tree-search-section-header"><');
+  });
+
   test("shows common parent dir once as section header when all items share the same dir", () => {
     const entries: GitHubTreeEntry[] = [
       { path: "openspec/specs/beads-viewer/spec.md", type: "blob", sha: "a1" },
@@ -297,5 +324,87 @@ describe("source badge click wiring in main.ts", () => {
     expect(renderIndex).toBeGreaterThan(-1);
     expect(fetchIndex).toBeGreaterThan(-1);
     expect(renderIndex).toBeLessThan(fetchIndex);
+  });
+});
+
+// Tasks 2.1-2.4 — pending-change indicators on canonical specs
+describe("renderPendingChangeIndicator", () => {
+  test("shows a pending-changes indicator for a canonical spec with one active change", () => {
+    const html = renderPendingChangeIndicator(
+      "openspec/specs/platform/spec.md",
+      { platform: ["add-platform-v2"] },
+      { "add-platform-v2": ["openspec/changes/add-platform-v2/proposal.md"] },
+    );
+
+    expect(html).toContain('class="pending-changes-indicator"');
+    expect(html).toContain('data-path="openspec/changes/add-platform-v2/proposal.md"');
+    expect(html).toContain("add-platform-v2");
+  });
+
+  test("shows multiple change links when more than one active change affects the spec", () => {
+    const html = renderPendingChangeIndicator(
+      "openspec/specs/platform/spec.md",
+      { platform: ["add-platform-v2", "add-platform-docs"] },
+      {
+        "add-platform-v2": ["openspec/changes/add-platform-v2/proposal.md"],
+        "add-platform-docs": ["openspec/changes/add-platform-docs/proposal.md"],
+      },
+    );
+
+    expect(html).toContain('data-path="openspec/changes/add-platform-v2/proposal.md"');
+    expect(html).toContain('data-path="openspec/changes/add-platform-docs/proposal.md"');
+  });
+
+  test("renders change name as plain text when the change has no proposal.md", () => {
+    const html = renderPendingChangeIndicator(
+      "openspec/specs/platform/spec.md",
+      { platform: ["add-platform-v2"] },
+      {},
+    );
+
+    expect(html).toContain("add-platform-v2");
+    expect(html).not.toContain('class="pending-change-link"');
+    expect(html).not.toContain("data-path=");
+  });
+
+  test("returns empty string for a canonical spec with no active changes", () => {
+    const html = renderPendingChangeIndicator(
+      "openspec/specs/platform/spec.md",
+      {},
+      {},
+    );
+
+    expect(html).toBe("");
+  });
+
+  test("returns empty string for non-canonical-spec paths", () => {
+    expect(
+      renderPendingChangeIndicator("README.md", { platform: ["add-platform-v2"] }, {}),
+    ).toBe("");
+    expect(
+      renderPendingChangeIndicator(
+        "openspec/changes/add-foo/specs/platform/spec.md",
+        { platform: ["add-foo"] },
+        {},
+      ),
+    ).toBe("");
+    expect(
+      renderPendingChangeIndicator(
+        "openspec/specs/platform/design.md",
+        { platform: ["add-foo"] },
+        {},
+      ),
+    ).toBe("");
+  });
+});
+
+describe("pending-change indicator wiring in main.ts", () => {
+  test("showFileView renders the pending-change indicator into the DOM", () => {
+    expect(mainTs).toContain("renderPendingChangeIndicator");
+  });
+
+  test("file-pending-indicator element exists in index.html", async () => {
+    const indexHtml = await Bun.file("src/index.html").text();
+    expect(indexHtml).toContain('id="file-pending-indicator"');
   });
 });

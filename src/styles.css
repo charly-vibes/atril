@@ -463,6 +463,48 @@ button.source-badge[data-active="true"]:hover {
   outline-offset: -2px;
 }
 
+/* ─── Pending-change indicator ─── */
+#file-pending-indicator:not(:empty) {
+  padding: 0.5rem 1.5rem 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.pending-changes-indicator {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pending-change-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pending-change-link {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.pending-change-link:hover {
+  text-decoration: underline;
+}
+
+.pending-change-name {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 /* ─── Content panels ─── */
 #file-content,
 #beads-content,
@@ -1128,6 +1170,7 @@ button.source-badge[data-active="true"]:hover {
   font-size: 0.85rem;
 }
 
+/* shown only on mobile — see @media (max-width: 600px) below */
 .beads-back-button {
   display: none;
 }

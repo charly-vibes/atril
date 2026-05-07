@@ -21,6 +21,7 @@ import {
   renderBreadcrumb,
   renderFileActions,
   renderFileBreadcrumb,
+  renderPendingChangeIndicator,
   renderSourceBadges,
   renderSuggestionList,
   renderTreeLevel,
@@ -56,6 +57,7 @@ const loadingMessage = $("loading-message")!;
 const fileBack = $("file-back")!;
 const fileBreadcrumb = $("file-breadcrumb")!;
 const fileActions = $("file-actions")!;
+const filePendingIndicator = $("file-pending-indicator")!;
 const fileContent = $("file-content")!;
 const beadsBack = $("beads-back")!;
 const beadsBreadcrumb = $("beads-breadcrumb")!;
@@ -498,6 +500,8 @@ async function showFileView(path: string, anchor?: string) {
 
   fileBreadcrumb.innerHTML = renderFileBreadcrumb(path, currentTree?.entries ?? []);
   fileActions.innerHTML = renderFileActions();
+  const openspecIndex = buildOpenSpecIndex(currentTree?.entries ?? []);
+  filePendingIndicator.innerHTML = renderPendingChangeIndicator(path, openspecIndex.capabilityAffectedBy, openspecIndex.changeFiles);
 
   try {
     const content = await client.getFileContent(
@@ -610,7 +614,7 @@ document.addEventListener("input", (e) => {
 
 // Branch toggle → show input, submit → reload with new branch
 document.addEventListener("click", (e) => {
-  const canonicalSpecLink = (e.target as HTMLElement).closest(".canonical-spec-link") as HTMLElement | null;
+  const canonicalSpecLink = (e.target as HTMLElement).closest(".canonical-spec-link, .pending-change-link") as HTMLElement | null;
   if (canonicalSpecLink && currentContext) {
     const path = canonicalSpecLink.dataset.path;
     if (path) {

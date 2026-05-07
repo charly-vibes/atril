@@ -28,8 +28,9 @@ export function renderTreeLevel(nodes: TreeNode[]): string {
 
 export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
   const items = entries.map((entry) => {
-    let name = entry.path.slice(entry.path.lastIndexOf("/") + 1);
-    let dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+    const slash = entry.path.lastIndexOf("/");
+    let name = slash === -1 ? entry.path : entry.path.slice(slash + 1);
+    let dir = slash === -1 ? "" : entry.path.slice(0, slash);
 
     if (name === "spec.md" && dir.includes("/specs/") && entry.path.startsWith("openspec/")) {
       name = dir.slice(dir.lastIndexOf("/") + 1);
@@ -48,6 +49,7 @@ export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
 
   if (groups.size === 1) {
     const [[commonDir, groupItems]] = [...groups.entries()];
+    const label = commonDir || "(root)";
     const listItems = groupItems!
       .map(
         ({ path, name }) => `<li>
@@ -57,12 +59,13 @@ export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
       </li>`,
       )
       .join("");
-    return `<ul class="tree-search-results"><li class="tree-search-section-header">${escapeHtml(commonDir!)}</li>${listItems}</ul>`;
+    return `<ul class="tree-search-results"><li class="tree-search-section-header">${escapeHtml(label)}</li>${listItems}</ul>`;
   }
 
   const sections = [...groups.entries()]
     .map(([dir, groupItems]) => {
-      const header = dir ? `<li class="tree-search-section-header">${escapeHtml(dir)}</li>` : "";
+      const dirLabel = dir || "(root)";
+      const header = `<li class="tree-search-section-header">${escapeHtml(dirLabel)}</li>`;
       const listItems = groupItems
         .map(
           ({ path, name }) => `<li>
@@ -107,6 +110,33 @@ export function renderFileBreadcrumb(path: string, entries: GitHubTreeEntry[]): 
   if (!hasCanonical) return breadcrumb;
 
   return `${breadcrumb}<span class="breadcrumb-meta-sep">·</span><button type="button" class="canonical-spec-link" data-path="${escapeHtml(canonicalSpecPath)}">View canonical spec</button>`;
+}
+
+function getCapabilityFromSpecPath(path: string): string | undefined {
+  const match = path.match(/^openspec\/specs\/([^/]+)\/spec\.md$/);
+  return match ? match[1] : undefined;
+}
+
+export function renderPendingChangeIndicator(
+  path: string,
+  capabilityAffectedBy: Record<string, string[]>,
+  changeFiles: Record<string, string[]>,
+): string {
+  const capability = getCapabilityFromSpecPath(path);
+  if (!capability) return "";
+
+  const affectingChanges = capabilityAffectedBy[capability] ?? [];
+  if (affectingChanges.length === 0) return "";
+
+  const items = affectingChanges.map((changeId) => {
+    const proposalPath = `openspec/changes/${changeId}/proposal.md`;
+    const hasProposal = (changeFiles[changeId] ?? []).includes(proposalPath);
+    return hasProposal
+      ? `<li><button type="button" class="pending-change-link" data-path="${escapeHtml(proposalPath)}">${escapeHtml(changeId)}</button></li>`
+      : `<li><span class="pending-change-name">${escapeHtml(changeId)}</span></li>`;
+  });
+
+  return `<div class="pending-changes-indicator"><ul class="pending-change-list">${items.join("")}</ul></div>`;
 }
 
 export function renderFileActions(): string {

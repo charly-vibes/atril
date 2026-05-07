@@ -29,13 +29,13 @@
 - [x] 4.3 Show missing-document indicators for incomplete active changes instead of hiding them.
 - [x] 4.4 Show task completion summary when `tasks.md` is present and parseable.
 - [x] 4.5 Show a non-numeric tasks-available state when `tasks.md` has no parseable checkbox tasks.
-- [ ] 4.6 Support navigation from change details to affected current specs when canonical specs exist.
+- [x] 4.6 Support navigation from change details to affected current specs when canonical specs exist.
 
 ## 5. Specs and archives
 
-- [ ] 5.1 Keep current specs available as canonical capability documents under the Specs section.
-- [ ] 5.2 Support navigation from a current spec to related active changes when indexed relationships exist.
-- [ ] 5.3 Show archived changes in a lower-priority Archive section and hide or collapse the Archive section by default when empty.
+- [x] 5.1 Keep current specs available as canonical capability documents under the Specs section.
+- [x] 5.2 Support navigation from a current spec to related active changes when indexed relationships exist.
+- [x] 5.3 Show archived changes in a lower-priority Archive section and hide or collapse the Archive section by default when empty.
 
 ## 6. Validation and review
 
