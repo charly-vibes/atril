@@ -470,17 +470,12 @@ async function showSpecsView() {
 
     let renderedSpecsHtml: string | undefined;
     if (specs.length > 0) {
-      const tocItems = specs
-        .map((s) => `<li><a href="#spec-${escapeHtml(s.name)}">${escapeHtml(s.name)}</a></li>`)
-        .join("");
-      const toc = `<nav class="specs-toc"><ol>${tocItems}</ol></nav>`;
-      const sections = specs
+      renderedSpecsHtml = specs
         .map((s) => {
           const rendered = renderReadableDocument(s.path, s.content, currentTree?.entries ?? []);
           return `<section class="spec-section" id="spec-${escapeHtml(s.name)}">${rendered}</section>`;
         })
         .join('<hr class="spec-divider">');
-      renderedSpecsHtml = toc + sections;
     }
 
     specsContent.innerHTML = renderOpenSpecWorkspaceOverview(index, { renderedSpecsHtml, taskSummaries });
