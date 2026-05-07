@@ -167,4 +167,36 @@ describe("buildOpenSpecIndex", () => {
     const index = buildOpenSpecIndex(entries);
     expect(index.projectDocuments).toEqual([]);
   });
+
+  test("tracks file paths for archived changes", () => {
+    const entries = tree(
+      "openspec/changes/archive/2026-01-15-add-platform/proposal.md",
+      "openspec/changes/archive/2026-01-15-add-platform/tasks.md",
+      "openspec/changes/archive/2026-01-15-add-platform/specs/platform/spec.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.archivedChangeFiles["2026-01-15-add-platform"]).toContain(
+      "openspec/changes/archive/2026-01-15-add-platform/proposal.md",
+    );
+    expect(index.archivedChangeFiles["2026-01-15-add-platform"]).toContain(
+      "openspec/changes/archive/2026-01-15-add-platform/tasks.md",
+    );
+  });
+
+  test("maps archived change delta specs to current capabilities", () => {
+    const entries = tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/archive/2026-01-15-add-legacy/specs/platform/spec.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.archivedChangeAffects["2026-01-15-add-legacy"]).toEqual(["platform"]);
+  });
+
+  test("omits archived delta specs for capabilities that no longer exist in specs/", () => {
+    const entries = tree(
+      "openspec/changes/archive/2026-01-15-old/specs/removed-cap/spec.md",
+    );
+    const index = buildOpenSpecIndex(entries);
+    expect(index.archivedChangeAffects["2026-01-15-old"]).toBeUndefined();
+  });
 });

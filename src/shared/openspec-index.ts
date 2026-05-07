@@ -17,6 +17,10 @@ export interface OpenSpecIndex {
   capabilityFiles: Record<string, string[]>;
   /** change-id → list of file paths */
   changeFiles: Record<string, string[]>;
+  /** archived-change-id → list of file paths */
+  archivedChangeFiles: Record<string, string[]>;
+  /** archived-change-id → list of current capability names with delta specs */
+  archivedChangeAffects: Record<string, string[]>;
   /** First-class project documents directly under openspec/ (e.g. project.md, AGENTS.md). */
   projectDocuments: string[];
   /** All blob files under openspec/ for raw workspace navigation/counts, including projectDocuments. */
@@ -57,11 +61,13 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
   const changeIntroduces: Record<string, string[]> = {};
   const capabilityFiles: Record<string, string[]> = {};
   const changeFiles: Record<string, string[]> = {};
+  const archivedChangeFiles: Record<string, string[]> = {};
   const projectDocuments: string[] = [];
   const workspaceFiles: string[] = [];
 
   // Delta spec paths: changes/<change-id>/specs/<capability>/
   const deltaSpecs: { changeId: string; capability: string }[] = [];
+  const archivedDeltaSpecs: { changeId: string; capability: string }[] = [];
 
   for (const entry of entries) {
     if (entry.type !== "blob") continue;
@@ -77,6 +83,11 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
     const archivedChangeId = getArchivedChangeId(entry.path);
     if (archivedChangeId) {
       archivedSet.add(archivedChangeId);
+      (archivedChangeFiles[archivedChangeId] ??= []).push(entry.path);
+      const archiveDeltaMatch = entry.path.match(/^openspec\/changes\/archive\/[^/]+\/specs\/([^/]+)\//);
+      if (archiveDeltaMatch) {
+        archivedDeltaSpecs.push({ changeId: archivedChangeId, capability: archiveDeltaMatch[1]! });
+      }
       continue;
     }
 
@@ -96,7 +107,7 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
     }
   }
 
-  // Build cross-reference maps from delta specs
+  // Build cross-reference maps from active delta specs
   for (const { changeId, capability } of deltaSpecs) {
     const affects = (changeAffects[changeId] ??= []);
     if (!affects.includes(capability)) affects.push(capability);
@@ -111,6 +122,15 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
     }
   }
 
+  // Build cross-reference maps from archived delta specs (only for current capabilities)
+  const archivedChangeAffects: Record<string, string[]> = {};
+  for (const { changeId, capability } of archivedDeltaSpecs) {
+    if (capabilitySet.has(capability)) {
+      const affects = (archivedChangeAffects[changeId] ??= []);
+      if (!affects.includes(capability)) affects.push(capability);
+    }
+  }
+
   return {
     capabilities: [...capabilitySet].sort(),
     changes: [...changeSet].sort(),
@@ -120,6 +140,8 @@ export function buildOpenSpecIndex(entries: GitHubTreeEntry[]): OpenSpecIndex {
     changeIntroduces,
     capabilityFiles,
     changeFiles,
+    archivedChangeFiles,
+    archivedChangeAffects,
     projectDocuments: projectDocuments.sort(),
     workspaceFiles: workspaceFiles.sort(),
   };

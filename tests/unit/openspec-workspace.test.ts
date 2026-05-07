@@ -47,7 +47,7 @@ describe("renderOpenSpecWorkspaceOverview", () => {
     expect(html).toContain('data-path="openspec/AGENTS.md"');
     expect(html).toContain("No current specs found");
     expect(html).toContain("No active changes found");
-    expect(html).toContain("No archived changes found");
+    expect(html).not.toContain('data-workspace-section="archive"');
   });
 
   test("does not show AGENTS.md under Project documents when absent", () => {
@@ -188,6 +188,117 @@ describe("renderOpenSpecWorkspaceOverview — first-class changes", () => {
 
     expect(html).toContain('data-change-id="change-a"');
     expect(html).toContain('data-change-id="change-b"');
+  });
+});
+
+describe("renderOpenSpecWorkspaceOverview — navigation cross-links", () => {
+  test("renders capabilities as clickable links to their canonical spec files", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/specs/spec-viewer/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+
+    expect(html).toContain('data-path="openspec/specs/platform/spec.md"');
+    expect(html).toContain('data-path="openspec/specs/spec-viewer/spec.md"');
+  });
+
+  test("shows affecting active change links under each capability in the specs section", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+      "openspec/changes/add-reader/specs/platform/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+    const specsSection = html.slice(
+      html.indexOf('data-workspace-section="specs"'),
+      html.indexOf('data-workspace-section="changes"'),
+    );
+
+    expect(specsSection).toContain('data-path="openspec/changes/add-reader/proposal.md"');
+  });
+
+  test("shows canonical spec links in change card affects section", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+      "openspec/changes/add-reader/specs/platform/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+    const changesStart = html.indexOf('data-workspace-section="changes"');
+    const archiveStart = html.indexOf('data-workspace-section="archive"');
+    const changesSection = html.slice(
+      changesStart,
+      archiveStart > changesStart ? archiveStart : html.length,
+    );
+
+    expect(changesSection).toContain('data-path="openspec/specs/platform/spec.md"');
+  });
+
+  test("does not show canonical spec links for new capabilities introduced by a change", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/changes/add-new/proposal.md",
+      "openspec/changes/add-new/specs/brand-new-cap/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+    const changesStart = html.indexOf('data-workspace-section="changes"');
+    const changesSection = html.slice(changesStart);
+
+    expect(changesSection).not.toContain('data-path="openspec/specs/brand-new-cap/spec.md"');
+  });
+
+  test("hides archive section entirely when no archived changes exist", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/add-reader/proposal.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+
+    expect(html).not.toContain('data-workspace-section="archive"');
+    expect(html).not.toContain("No archived changes found");
+  });
+
+  test("renders archived changes as clickable links to their proposal files", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/changes/archive/2026-01-15-add-platform/proposal.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+
+    expect(html).toContain('data-workspace-section="archive"');
+    expect(html).toContain(
+      'data-path="openspec/changes/archive/2026-01-15-add-platform/proposal.md"',
+    );
+  });
+
+  test("shows current spec cross-links under archived changes that have delta specs", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/specs/platform/spec.md",
+      "openspec/changes/archive/2026-01-15-add-platform/proposal.md",
+      "openspec/changes/archive/2026-01-15-add-platform/specs/platform/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+    const archiveSection = html.slice(html.indexOf('data-workspace-section="archive"'));
+
+    expect(archiveSection).toContain('data-path="openspec/specs/platform/spec.md"');
+  });
+
+  test("does not show archive spec cross-links for capabilities no longer in current specs", () => {
+    const index = buildOpenSpecIndex(tree(
+      "openspec/changes/archive/2026-01-15-old/proposal.md",
+      "openspec/changes/archive/2026-01-15-old/specs/removed-cap/spec.md",
+    ));
+
+    const html = renderOpenSpecWorkspaceOverview(index);
+    const archiveSection = html.slice(html.indexOf('data-workspace-section="archive"'));
+
+    expect(archiveSection).not.toContain('data-path="openspec/specs/removed-cap/spec.md"');
   });
 });
 

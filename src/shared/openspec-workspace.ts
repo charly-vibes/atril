@@ -18,9 +18,48 @@ function plural(count: number, singular: string, pluralForm = `${singular}s`): s
   return `${count} ${count === 1 ? singular : pluralForm}`;
 }
 
-function listItems(values: string[], toLabel = (value: string) => value): string {
-  if (values.length === 0) return "";
-  return `<ul>${values.map((value) => `<li>${escapeHtml(toLabel(value))}</li>`).join("")}</ul>`;
+function capabilityList(
+  capabilities: string[],
+  capabilityAffectedBy: Record<string, string[]>,
+  changeFiles: Record<string, string[]>,
+): string {
+  if (capabilities.length === 0) return "";
+  return `<ul>${capabilities.map((cap) => {
+    const specPath = `openspec/specs/${cap}/spec.md`;
+    const affectingChanges = capabilityAffectedBy[cap] ?? [];
+    const affectedByLinks = affectingChanges.length > 0
+      ? `<ul class="spec-affected-by">${affectingChanges.map((changeId) => {
+          const proposalPath = `openspec/changes/${changeId}/proposal.md`;
+          return (changeFiles[changeId] ?? []).includes(proposalPath)
+            ? `<li><button type="button" class="workspace-document-link" data-path="${escapeHtml(proposalPath)}">${escapeHtml(changeId)}</button></li>`
+            : `<li>${escapeHtml(changeId)}</li>`;
+        }).join("")}</ul>`
+      : "";
+    return `<li><button type="button" class="workspace-document-link" data-path="${escapeHtml(specPath)}">${escapeHtml(cap)}</button>${affectedByLinks}</li>`;
+  }).join("")}</ul>`;
+}
+
+function archivedChangeList(
+  archivedChanges: string[],
+  archivedChangeFiles: Record<string, string[]>,
+  archivedChangeAffects: Record<string, string[]>,
+): string {
+  if (archivedChanges.length === 0) return "";
+  return `<ul>${archivedChanges.map((id) => {
+    const proposalPath = `openspec/changes/archive/${id}/proposal.md`;
+    const files = archivedChangeFiles[id] ?? [];
+    const changeLink = files.includes(proposalPath)
+      ? `<button type="button" class="workspace-document-link" data-path="${escapeHtml(proposalPath)}">${escapeHtml(id)}</button>`
+      : escapeHtml(id);
+    const modifiedSpecs = archivedChangeAffects[id] ?? [];
+    const specLinks = modifiedSpecs.length > 0
+      ? `<ul class="archive-affects">${modifiedSpecs.map((cap) => {
+          const specPath = `openspec/specs/${cap}/spec.md`;
+          return `<li><button type="button" class="workspace-document-link" data-path="${escapeHtml(specPath)}">${escapeHtml(cap)}</button></li>`;
+        }).join("")}</ul>`
+      : "";
+    return `<li>${changeLink}${specLinks}</li>`;
+  }).join("")}</ul>`;
 }
 
 function linkedPathItems(paths: string[], className: string, toLabel = (path: string) => path): string {
@@ -47,6 +86,7 @@ function renderChangeCard(
   changeId: string,
   files: string[],
   taskSummary?: { done: number; total: number } | null,
+  affectedCurrentSpecs?: string[],
 ): string {
   const fileSet = new Set(files);
   const base = `openspec/changes/${changeId}`;
@@ -79,10 +119,18 @@ function renderChangeCard(
       ? `<p class="change-task-summary">tasks document available</p>`
       : "";
 
+  const affectsHtml = affectedCurrentSpecs && affectedCurrentSpecs.length > 0
+    ? `<ul class="change-affects">${affectedCurrentSpecs.map((cap) => {
+        const specPath = `openspec/specs/${cap}/spec.md`;
+        return `<li><button type="button" class="workspace-document-link" data-path="${escapeHtml(specPath)}">${escapeHtml(cap)}</button></li>`;
+      }).join("")}</ul>`
+    : "";
+
   return `<article class="change-card" data-change-id="${escapeHtml(changeId)}">
     <h3>${escapeHtml(changeId)}</h3>
     ${summaryHtml}
     <ul class="change-documents">${items.join("")}</ul>
+    ${affectsHtml}
   </article>`;
 }
 
@@ -101,18 +149,24 @@ export function renderOpenSpecWorkspaceOverview(
     .sort();
 
   const specsContent = index.capabilities.length > 0
-    ? listItems(index.capabilities)
+    ? capabilityList(index.capabilities, index.capabilityAffectedBy, index.changeFiles)
     : `<p class="workspace-empty">No current specs found.</p>`;
 
   const changesContent = index.changes.length > 0
     ? index.changes
-        .map((id) => renderChangeCard(id, index.changeFiles[id] ?? [], options.taskSummaries?.[id]))
+        .map((id) => {
+          const affectedCurrentSpecs = (index.changeAffects[id] ?? []).filter(
+            (cap) => index.capabilities.includes(cap),
+          );
+          return renderChangeCard(
+            id,
+            index.changeFiles[id] ?? [],
+            options.taskSummaries?.[id],
+            affectedCurrentSpecs,
+          );
+        })
         .join("")
     : `<p class="workspace-empty">No active changes found.</p>`;
-
-  const archiveContent = index.archivedChanges.length > 0
-    ? listItems(index.archivedChanges)
-    : `<p class="workspace-empty">No archived changes found.</p>`;
 
   const projectContent = projectDocuments.length > 0
     ? projectDocumentItems(projectDocuments)
@@ -148,11 +202,11 @@ export function renderOpenSpecWorkspaceOverview(
           <p class="workspace-count">${plural(index.changes.length, "active change")}</p>
           ${changesContent}
         </section>
-        <section class="workspace-section" data-workspace-section="archive">
+        ${index.archivedChanges.length > 0 ? `<section class="workspace-section" data-workspace-section="archive">
           <h2>Archive</h2>
           <p class="workspace-count">${plural(index.archivedChanges.length, "archived change")}</p>
-          ${archiveContent}
-        </section>
+          ${archivedChangeList(index.archivedChanges, index.archivedChangeFiles, index.archivedChangeAffects)}
+        </section>` : ""}
         <section class="workspace-section" data-workspace-section="files">
           <h2>Files</h2>
           <p class="workspace-count">${plural(rawWorkspaceFiles.length, "workspace file")}</p>
