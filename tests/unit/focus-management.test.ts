@@ -11,7 +11,7 @@ describe("getScreenFocusSelector", () => {
     expect(getScreenFocusSelector("tree")).toBe("#tree-back");
   });
 
-  test("returns first card selector for overview", () => {
+  test("returns active category-card selector for overview", () => {
     expect(getScreenFocusSelector("overview")).toBe(".category-card[data-active='true']");
   });
 
