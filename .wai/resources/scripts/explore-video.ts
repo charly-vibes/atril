@@ -142,12 +142,12 @@ async function main() {
   await page.goto(`${BASE}/?${QUERY}&view=overview`);
   await sleep(1000);
   await page.getByRole("button", { name: "Specs", exact: true }).first().click();
-  await page.waitForURL(`**view=tree**`, { timeout: 10000 });
-  await sleep(1500);
-  await page.screenshot({ path: path.join(import.meta.dir, "videos", "spec-tree.png") });
+  await page.waitForURL(`**view=specs**`, { timeout: 10000 });
+  await sleep(2000);
+  await page.screenshot({ path: path.join(import.meta.dir, "videos", "specs-workspace.png") });
 
-  // Open a spec file
-  const specFile = page.getByRole("button", { name: /spec-viewer|beads-viewer|platform/ }).first();
+  // Open a spec file via workspace-document-link or workspace-file-link
+  const specFile = page.locator(".workspace-document-link, .workspace-file-link").first();
   if (await specFile.isVisible()) {
     await specFile.click();
     await page.waitForURL(`**view=file**`, { timeout: 8000 });
