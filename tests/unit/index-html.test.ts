@@ -14,4 +14,8 @@ describe("index.html", () => {
       expect(indexHtml).toContain(`id="${id}"`);
     }
   });
+
+  test("screen containers are wrapped in a main landmark element with id='content'", () => {
+    expect(indexHtml).toContain('<main id="content">');
+  });
 });
