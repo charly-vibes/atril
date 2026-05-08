@@ -35,24 +35,12 @@ phase: implement
 ### git_status
 
 ```
- M .wai/projects/atril/.pending-resume
- M .wai/resources/scripts/explore-video.ts
- M .wai/resources/scripts/videos/badges.png
- M .wai/resources/scripts/videos/file-history.png
- M .wai/resources/scripts/videos/history-expanded.png
- M .wai/resources/scripts/videos/history.png
- M .wai/resources/scripts/videos/issue-detail.png
- M .wai/resources/scripts/videos/issue-share-url.png
- M .wai/resources/scripts/videos/issues-filtered.png
- M .wai/resources/scripts/videos/issues-no-results.png
- M .wai/resources/scripts/videos/issues-overview.png
- M .wai/resources/scripts/videos/mobile-issues.png
- M .wai/resources/scripts/videos/overview.png
- M .wai/resources/scripts/videos/search-router.png
- M .wai/resources/scripts/videos/search-spec.png
- M .wai/resources/scripts/videos/spec-file.png
- M .wai/resources/scripts/videos/wai-overview.png
- M .wai/resources/scripts/videos/zero-content.png
+ M .wai/pipeline-runs/ticket-cycle-2026-05-08-atril.yml
+?? .wai/projects/atril/research/2026-05-08-implemented-atril-dvg-focus-management-after-view.md
+?? .wai/projects/atril/research/2026-05-08-review-artifact-atril-dvg-ro5-converged-one-mi.md
+?? .wai/projects/atril/research/2026-05-08-ro5-review-of-atril-dvg-focus-management-converge.md
+?? .wai/projects/atril/research/2026-05-08-ticket-atril-dvg-done-implemented-focus-managemen.md
+?? .wai/projects/atril/reviews/2026-05-08-ro5-focus-management-review-converged-one-test.md
 ?? history-view.png
 ?? nav-validation-final.png
 ?? overview-cards-2.png
@@ -66,18 +54,15 @@ phase: implement
 
 ```
 ○ atril-03j ● P2 Navigator rendering
-○ atril-04b ● P2 [bug] F2: Add favicon to prevent 404 console error
 ○ atril-0mo ● P2 Add slide-in file tree panel from within spec/doc view
 ○ atril-1wy ● P2 Spec-change relationship index
 ○ atril-34o ● P2 feat: ubiquitous language explorer
-○ atril-42v ● P2 F4: Source badges look clickable but are not interactive
 ○ atril-70w ● P2 Wire focused dependency view with real issue data
 ○ atril-73c ● P2 6.3: Strict OpenSpec validation for add-unified-repo-reader
 ○ atril-79d ● P2 Navigator panel markup and layout
 ○ atril-7mr ● P2 Pending-change indicators on specs
 ○ atril-aa0 ● P2 Canonical spec links on change deltas
 ○ atril-bbm ● P2 Implement interactive dependency graph visualization
-○ atril-dvg ● P2 [bug] F9: Add focus management after view transitions
 ○ atril-img ● P2 Epic: Implement OpenSpec navigator panel
 ○ atril-jo6 ● P2 OpenSpec tree data model
 ○ atril-kz2 ● P2 Navigator interaction
@@ -99,7 +84,7 @@ phase: implement
 ○ atril-rmc ● P4 F12: Expand reference documentation beyond index
 
 --------------------------------------------------------------------------------
-Total: 32 issues (32 open, 0 in progress)
+Total: 29 issues (29 open, 0 in progress)
 
 Status: ○ open  ◐ in_progress  ● blocked  ✓ closed  ❄ deferred
 ```
