@@ -98,7 +98,35 @@ let currentBeadsSelectedId: string | undefined;
 let currentFilePath: string | undefined;
 let currentTarget: RouteTarget | undefined;
 let currentSpecs: { name: string; path: string; content: string }[] = [];
-let navDepth = 0;
+interface NavState {
+  depth: number;
+  view: string;
+  previousView?: string;
+}
+
+function navState(): NavState | null {
+  const s = history.state;
+  return s && typeof s.depth === "number" ? (s as NavState) : null;
+}
+
+const VIEW_BACK_LABELS: Record<string, string> = {
+  overview: "← Overview",
+  tree: "← Files",
+  specs: "← Specs",
+  beads: "← Issues",
+  history: "← History",
+  wai: "← WAI",
+  file: "← File",
+};
+
+function updateBackButtons() {
+  const prevView = navState()?.previousView;
+  const label = prevView ? (VIEW_BACK_LABELS[prevView] ?? "← Back") : "← Overview";
+  for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack, specsBack]) {
+    btn.textContent = label;
+  }
+}
+
 
 function showScreen(name: keyof typeof screens) {
   for (const [key, el] of Object.entries(screens)) {
@@ -131,14 +159,20 @@ function showError(message: string, err?: unknown) {
 
 function navigate(ctx: RepoContext, target: RouteTarget) {
   const url = buildRoute(ctx, target);
-  history.pushState(null, "", url);
-  navDepth++;
+  const prev = navState();
+  const state: NavState = {
+    depth: (prev?.depth ?? 0) + 1,
+    view: target.view,
+    previousView: prev?.view,
+  };
+  history.pushState(state, "", url);
   currentContext = ctx;
   routeTo(target);
 }
 
 async function routeTo(target: RouteTarget) {
   currentTarget = target;
+  updateBackButtons();
 
   if (target.view === "overview") {
     showScreen("overview");
@@ -580,7 +614,13 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
     finishLoading("overview", "Repository loaded.");
 
     const target = initialTarget ?? { view: "overview" as const };
-    navigate(currentContext, target);
+    // On reload, history.state already has the correct depth/previousView — just re-render.
+    // On fresh load (shared link, first visit), history.state is null — push a new entry.
+    if (initialTarget && history.state) {
+      routeTo(target);
+    } else {
+      navigate(currentContext, target);
+    }
   } catch (err) {
     finishLoading("overview", "Failed to load repository.");
     const message = err instanceof GitHubApiError
@@ -995,7 +1035,7 @@ treeContent.addEventListener("click", (e) => {
 // Back buttons → go back in history (preserves tree → file → back = tree)
 for (const btn of [fileBack, beadsBack, historyBack, waiBack, treeBack, specsBack]) {
   btn.addEventListener("click", () => {
-    if (navDepth > 0) {
+    if ((navState()?.depth ?? 0) > 0 && navState()?.previousView) {
       history.back();
     } else if (currentContext) {
       navigate(currentContext, { view: "overview" });
@@ -1012,7 +1052,6 @@ errorBack.addEventListener("click", () => {
 
 // Browser back/forward → re-route
 window.addEventListener("popstate", () => {
-  if (navDepth > 0) navDepth--;
   const route = parseRoute(new URLSearchParams(location.search));
   if (route) {
     currentContext = route.context;
