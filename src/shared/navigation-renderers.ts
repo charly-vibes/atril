@@ -153,6 +153,67 @@ const inactiveBadgeTitles: Record<string, string> = {
   language: "No language glossary found in this repository",
 };
 
+export function renderCategoryCards(sources: KnowledgeSources, entries: GitHubTreeEntry[]): string {
+  const specCount = entries.filter(
+    (e) => e.type === "blob" && e.path.startsWith("openspec/specs/") && e.path.endsWith(".md"),
+  ).length;
+  const docCount = entries.filter(
+    (e) =>
+      e.type === "blob" &&
+      (e.path.startsWith("docs/") || /^readme(\.\w+)?$/i.test(e.path)),
+  ).length;
+  const docsActive = sources.docs || sources.readme;
+
+  const cards: Array<{ kind: string; name: string; summary: string; active: boolean }> = [
+    {
+      kind: "openspec",
+      name: "Specs",
+      summary: sources.openspec
+        ? specCount > 0
+          ? `${specCount} spec file${specCount === 1 ? "" : "s"}`
+          : "Specs found"
+        : "No specs found",
+      active: sources.openspec,
+    },
+    {
+      kind: "docs",
+      name: "Docs",
+      summary: docsActive
+        ? docCount > 0
+          ? `${docCount} doc file${docCount === 1 ? "" : "s"}`
+          : "Docs found"
+        : "No docs found",
+      active: docsActive,
+    },
+    {
+      kind: "beads",
+      name: "Issues",
+      summary: sources.beads ? "Issues tracked" : "No issues found",
+      active: sources.beads,
+    },
+    {
+      kind: "history",
+      name: "History",
+      summary: "Recent commits",
+      active: true,
+    },
+  ];
+
+  return `<div class="category-cards">${cards
+    .map((card) =>
+      card.active
+        ? `<button type="button" class="category-card" data-kind="${escapeHtml(card.kind)}" data-active="true">
+            <span class="category-card-name">${escapeHtml(card.name)}</span>
+            <span class="category-card-summary">${escapeHtml(card.summary)}</span>
+          </button>`
+        : `<span class="category-card" data-active="false">
+            <span class="category-card-name">${escapeHtml(card.name)}</span>
+            <span class="category-card-summary">${escapeHtml(card.summary)}</span>
+          </span>`,
+    )
+    .join("")}</div>`;
+}
+
 export function renderSourceBadges(sources: KnowledgeSources, suggestions: EntryPoint[]): string {
   const sourceLabels: Array<[keyof KnowledgeSources, string]> = [
     ["openspec", "Specs"],

@@ -1,5 +1,5 @@
 import { parseRepoInput, type RepoRef } from "./shared/github";
-import { GitHubClient, GitHubApiError, type TreeResult } from "./shared/github-api";
+import { GitHubClient, GitHubApiError, type GitHubTreeEntry, type TreeResult } from "./shared/github-api";
 import {
   detectKnowledgeSources,
   suggestEntryPoints,
@@ -19,11 +19,10 @@ import { renderOpenSpecWorkspaceOverview, parseTaskSummary } from "./shared/open
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
   renderBreadcrumb,
+  renderCategoryCards,
   renderFileActions,
   renderFileBreadcrumb,
   renderPendingChangeIndicator,
-  renderSourceBadges,
-  renderSuggestionList,
   renderTreeLevel,
   renderTreeSearchResults,
 } from "./shared/navigation-renderers";
@@ -559,7 +558,13 @@ async function showFileView(path: string, anchor?: string) {
   }
 }
 
-function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources, suggestions: EntryPoint[]) {
+function renderOverview(
+  ref: RepoRef,
+  branch: string,
+  sources: KnowledgeSources,
+  _suggestions: EntryPoint[],
+  entries: GitHubTreeEntry[],
+) {
   const header = $("overview-header")!;
   header.innerHTML = `<h2>${escapeHtml(ref.owner)}/${escapeHtml(ref.repo)}</h2>
     <button type="button" class="branch-toggle" title="Change branch">
@@ -571,26 +576,16 @@ function renderOverview(ref: RepoRef, branch: string, sources: KnowledgeSources,
     </form>`;
 
   const sourcesEl = $("overview-sources")!;
-  sourcesEl.innerHTML = renderSourceBadges(sources, suggestions);
+  sourcesEl.innerHTML = renderCategoryCards(sources, entries);
 
-  const overviewActions = $("overview-actions")!;
-  overviewActions.innerHTML = "";
+  $("overview-actions")!.innerHTML = "";
 
   const suggestionsEl = $("overview-suggestions")!;
-  const emptyEl = $("overview-empty")!;
-
-  if (suggestions.length === 0) {
-    suggestionsEl.innerHTML = "";
-    emptyEl.hidden = false;
-  } else {
-    emptyEl.hidden = true;
-    suggestionsEl.innerHTML = `
-      <h3>Start reading</h3>
-      ${renderSuggestionList(suggestions)}
-      <div class="overview-search-container">
-        <input id="overview-search" type="text" placeholder="Search files…" autocomplete="off" />
-      </div>`;
-  }
+  $("overview-empty")!.hidden = true;
+  suggestionsEl.innerHTML = `
+    <div class="overview-search-container">
+      <input id="overview-search" type="text" placeholder="Search files…" autocomplete="off" />
+    </div>`;
 }
 
 async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
@@ -610,7 +605,7 @@ async function loadRepo(ref: RepoRef, initialTarget?: RouteTarget) {
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
 
-    renderOverview(ref, branch, sources, suggestions);
+    renderOverview(ref, branch, sources, suggestions, tree.entries);
     finishLoading("overview", "Repository loaded.");
 
     const target = initialTarget ?? { view: "overview" as const };
@@ -703,7 +698,7 @@ async function switchBranch(ref: { owner: string; repo: string }, branch: string
     currentBeadsSelectedId = undefined;
     const sources = detectKnowledgeSources(tree.entries);
     const suggestions = suggestEntryPoints(sources, tree.entries);
-    renderOverview(ref, branch, sources, suggestions);
+    renderOverview(ref, branch, sources, suggestions, tree.entries);
     finishLoading("overview", `Branch ${branch} loaded.`);
     navigate(currentContext, { view: "overview" });
   } catch (err) {
@@ -763,9 +758,9 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  const badge = target.closest(".source-badge") as HTMLElement | null;
-  if (badge?.tagName === "BUTTON") {
-    navigateOverviewItem(badge.dataset.kind, badge.dataset.path);
+  const card = target.closest(".category-card") as HTMLElement | null;
+  if (card?.tagName === "BUTTON") {
+    navigateOverviewItem(card.dataset.kind, card.dataset.path);
   }
 });
 

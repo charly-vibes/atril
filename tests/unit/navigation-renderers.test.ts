@@ -290,15 +290,15 @@ describe("renderFileActions", () => {
   });
 });
 
-// Task 5.2 — wiring: main.ts routes source badge clicks to the navigator
+// Task 5.2 — wiring: main.ts routes category card clicks to the navigator
 describe("source badge click wiring in main.ts", () => {
-  test("click handler reads data-kind from active source badge to determine navigation target", () => {
-    // The handler uses .closest('.source-badge') and checks tagName === 'BUTTON'
-    // then passes badge.dataset.kind and badge.dataset.path to navigateOverviewItem
-    expect(mainTs).toContain("closest(\".source-badge\")");
-    expect(mainTs).toContain('badge?.tagName === "BUTTON"');
-    expect(mainTs).toContain("badge.dataset.kind");
-    expect(mainTs).toContain("badge.dataset.path");
+  test("click handler reads data-kind from active category card to determine navigation target", () => {
+    // The handler uses .closest('.category-card') and checks tagName === 'BUTTON'
+    // then passes card.dataset.kind and card.dataset.path to navigateOverviewItem
+    expect(mainTs).toContain("closest(\".category-card\")");
+    expect(mainTs).toContain('card?.tagName === "BUTTON"');
+    expect(mainTs).toContain("card.dataset.kind");
+    expect(mainTs).toContain("card.dataset.path");
   });
 
   test("navigateOverviewItem routes kind=openspec to the Specs/OpenSpec Workspace view", () => {
