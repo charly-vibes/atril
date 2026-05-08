@@ -30,6 +30,7 @@ import { loadBeadsIssues, type BeadsLoadResult } from "./shared/beads-loader";
 import { renderBeadsListView, resolveVisibleSelectedIssueId, type BeadsFilters } from "./shared/beads-renderer";
 import { beginAsyncUpdate, endAsyncUpdate } from "./shared/loading-accessibility";
 import { buildDocumentTitle } from "./shared/document-title";
+import { getScreenFocusSelector } from "./shared/focus-management";
 
 const $ = (id: string) => document.getElementById(id);
 
@@ -136,6 +137,11 @@ function showScreen(name: keyof typeof screens) {
     ? name
     : undefined;
   document.title = buildDocumentTitle(currentContext, currentTarget, screen ? { screen } : undefined);
+
+  const selector = getScreenFocusSelector(name);
+  if (selector) {
+    (screens[name] as HTMLElement).querySelector<HTMLElement>(selector)?.focus();
+  }
 }
 
 function startLoading(region: keyof typeof busyRegions, message: string) {

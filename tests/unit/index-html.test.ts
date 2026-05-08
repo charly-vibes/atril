@@ -8,4 +8,10 @@ describe("index.html", () => {
     expect(indexHtml).toContain('type="image/svg+xml"');
     expect(indexHtml).toContain('href="data:image/svg+xml,');
   });
+
+  test("each content screen has a back button matching the focus-management selector", () => {
+    for (const id of ["file-back", "beads-back", "history-back", "wai-back", "specs-back", "tree-back"]) {
+      expect(indexHtml).toContain(`id="${id}"`);
+    }
+  });
 });
