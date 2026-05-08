@@ -48,7 +48,7 @@ export function renderTreeSearchResults(entries: GitHubTreeEntry[]): string {
   }
 
   if (groups.size === 1) {
-    const [[commonDir, groupItems]] = [...groups.entries()];
+    const [commonDir, groupItems] = [...groups.entries()][0]!;
     const label = commonDir || "(root)";
     const listItems = groupItems!
       .map(
