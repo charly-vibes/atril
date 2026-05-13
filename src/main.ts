@@ -14,7 +14,7 @@ import { buildWaiArtifactGroups, renderWaiOverview, renderLanguageEntry } from "
 import { listBoundedContexts, renderLanguageOverview, extractGlossaryTerms, renderGlossary, termToAnchor } from "./views/language-explorer";
 import { renderReadableDocument } from "./shared/document-renderer";
 import { escapeHtml } from "./shared/html-utils";
-import { buildOpenSpecIndex } from "./shared/openspec-index";
+import { buildOpenSpecIndex, type OpenSpecIndex } from "./shared/openspec-index";
 import { renderOpenSpecWorkspaceOverview, parseTaskSummary } from "./shared/openspec-workspace";
 import { buildFileTree, fuzzyFilterEntries, filterRelevantEntries } from "./shared/file-tree";
 import {
@@ -98,6 +98,7 @@ let currentBeadsSelectedId: string | undefined;
 let currentFilePath: string | undefined;
 let currentTarget: RouteTarget | undefined;
 let currentSpecs: { name: string; path: string; content: string }[] = [];
+let currentOpenSpecIndex: OpenSpecIndex | null = null;
 interface NavState {
   depth: number;
   view: string;
@@ -443,8 +444,10 @@ function renderSearchResults(query: string) {
 async function showSpecsView() {
   if (!currentContext || !currentTree) return;
   currentSpecs = [];
+  currentOpenSpecIndex = null;
 
   const index = buildOpenSpecIndex(currentTree.entries);
+  currentOpenSpecIndex = index;
   const hasOpenSpecWorkspace =
     index.workspaceFiles.length > 0 ||
     index.projectDocuments.length > 0 ||
@@ -875,25 +878,47 @@ $("specs-actions")!.addEventListener("click", async (e) => {
   if (copyButton) void copyCurrentUrl(copyButton);
 
   const downloadButton = (e.target as HTMLElement).closest("#specs-download") as HTMLButtonElement | null;
-  if (downloadButton && currentSpecs.length > 0 && currentContext) {
-    const combined = currentSpecs
-      .map((s) => `# ${s.name}\n\n${s.content}`)
-      .join("\n\n---\n\n");
-    const blob = new Blob([combined], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const date = new Date().toISOString().slice(0, 10);
-    const sha = (currentTree?.commitSha ?? await client.getCommitSha(
-      currentContext.owner,
-      currentContext.repo,
-      currentContext.branch,
-    )).slice(0, 7);
-    a.download = `${date}-${currentContext.repo}-${sha}-specs.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  if (downloadButton && currentContext && currentOpenSpecIndex) {
+    const mdPaths = currentOpenSpecIndex.workspaceFiles.filter((p) => p.endsWith(".md"));
+    if (mdPaths.length === 0) return;
+
+    downloadButton.disabled = true;
+    try {
+      const prefetched = new Map(currentSpecs.map((s) => [s.path, s.content]));
+      const contents = await Promise.all(
+        mdPaths.map((p) => {
+          const cached = prefetched.get(p);
+          if (cached !== undefined) return cached;
+          return client
+            .getFileContent(currentContext!.owner, currentContext!.repo, currentContext!.branch, p)
+            .catch(() => null);
+        }),
+      );
+
+      const parts: string[] = [];
+      for (let i = 0; i < mdPaths.length; i++) {
+        if (contents[i]) parts.push(`<!-- ${mdPaths[i]!} -->\n\n${contents[i]}`);
+      }
+      if (parts.length === 0) return;
+
+      const combined = parts.join("\n\n---\n\n");
+      const blob = new Blob([combined], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const date = new Date().toISOString().slice(0, 10);
+      const sha = (
+        currentTree?.commitSha ??
+        (await client.getCommitSha(currentContext.owner, currentContext.repo, currentContext.branch))
+      ).slice(0, 7);
+      a.download = `${date}-${currentContext.repo}-${sha}-workspace.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      downloadButton.disabled = false;
+    }
   }
 });
 
