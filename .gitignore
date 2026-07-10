@@ -12,6 +12,11 @@ bun.lock
 *.db
 .beads-credential-key
 
+# Beads internal state (track only issues.jsonl for backup)
+.beads/*
+!.beads/issues.jsonl
+!.beads/config.yaml
+
 # Local agent settings
 .claude/settings.local.json
 
